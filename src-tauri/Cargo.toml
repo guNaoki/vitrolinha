@@ -1,0 +1,37 @@
+[package]
+name = "flyout"
+version = "0.1.0"
+description = "Flyout de música — toca-discos C2"
+edition = "2024"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# protocol-asset: o front lê a capa (arquivo temporário) via asset://
+# tray-icon: bandeja do sistema
+tauri = { version = "2", features = ["protocol-asset", "tray-icon"] }
+tauri-plugin-store = "2" # persistência das configurações (previsto no briefing)
+tauri-plugin-single-instance = "2" # uma instância só (previsto no briefing)
+tauri-plugin-autostart = "2" # iniciar com o Windows (previsto no briefing)
+tauri-plugin-global-shortcut = "2" # atalhos globais (extra pedido pelo usuário)
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+windows = { version = "0.62", features = [
+  "Foundation",
+  "Foundation_Collections",
+  "Graphics_Imaging",
+  "Media_Control",
+  "Storage_Streams",
+  "Web_Http", # HttpClient do sistema para buscar letras (sem crate HTTP extra)
+  "Web_Http_Headers",
+  "Win32_System_WinRT",
+  "Win32_UI_Shell", # SHQueryUserNotificationState (suprimir o popup em tela cheia)
+] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+panic = "abort"
+codegen-units = 1

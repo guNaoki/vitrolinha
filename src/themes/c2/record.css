@@ -1,0 +1,185 @@
+/* Disco e braço da agulha. Coordenadas no palco de referência 1280×720.
+   Só `transform` e `opacity` animam; will-change apenas no disco. */
+
+/* ---------- Disco ---------- */
+.disc,
+.disc-shadow {
+  position: absolute;
+  left: -130px;
+  top: -130px; /* centro em (420, 420) */
+  width: 1100px;
+  height: 1100px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Sombra fixa (não gira, não anima). */
+.disc-shadow {
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+}
+
+.disc-spin {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #0d0b08 0 2px, #1c1711 2px 4px);
+  will-change: transform;
+  /* 33⅓ rpm. Testado com steps() a 30 e 10 fps: o custo de CPU/GPU não caiu
+     (ver docs/performance.md), então fica linear, que é mais suave. */
+  animation: spin 1.8s linear infinite;
+  animation-play-state: paused;
+}
+body[data-status="playing"]:not([data-hidden]) .disc-spin {
+  animation-play-state: running;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(239, 226, 195, 0.09);
+}
+.r1 { inset: 40px; }
+.r2 { inset: 130px; }
+.r3 { inset: 210px; }
+
+/* Brilho do vinil: estático, não gira. */
+.disc-gloss {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 25deg,
+    transparent 0 6%,
+    rgba(255, 244, 220, 0.1) 11%,
+    transparent 17% 48%,
+    rgba(255, 244, 220, 0.08) 61%,
+    transparent 67% 100%
+  );
+}
+
+/* Selo: 380px com a capa em recorte circular. */
+.label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 380px;
+  height: 380px;
+  margin: -190px 0 0 -190px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 6px solid var(--label-edge);
+  background: radial-gradient(circle, color-mix(in srgb, var(--amber) 94%, #000), var(--label));
+  overflow: hidden;
+}
+.cover {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+}
+/* Ponto creme: deixa o giro visível mesmo com capa lisa. */
+.dot {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: 0 0 0 2px rgba(13, 10, 7, 0.35);
+}
+.hole {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: 0 0 0 3px rgba(239, 226, 195, 0.35);
+}
+
+/* ---------- Braço ---------- */
+/* Pivô em (1130, 90). O braço é desenhado apontando para +x; a rotação vem de
+   --arm (ver lib/arm.ts): 113,7° + 28,9° × progresso, em sentido horário. */
+.arm {
+  position: absolute;
+  left: 1130px;
+  top: 90px;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  --arm: 113.7deg;
+}
+.arm-base {
+  position: absolute;
+  left: -64px;
+  top: -64px;
+}
+.arm-cap {
+  position: absolute;
+  left: -32px;
+  top: -32px;
+}
+.arm-rot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  transform: rotate(var(--arm));
+  transition: transform 1s linear; /* um passo por segundo, sem rAF */
+}
+.arm-dot {
+  fill: var(--amber); /* ponto da agulha acompanha o destaque */
+}
+.arm-art {
+  position: absolute;
+  left: -130px;
+  top: -30px;
+  overflow: visible;
+}
+
+/* Sombra do braço: cópia escura deslocada em espaço de tela. */
+.arm-shadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0.4;
+  transform: translate(7px, 10px);
+  transition:
+    transform 0.5s ease,
+    opacity 0.5s ease;
+}
+
+/* Fora de reprodução o braço levanta (cresce um pouco) e a sombra se afasta. */
+.arm.lifted .arm-rot {
+  transform: rotate(var(--arm)) scale(1.03);
+}
+.arm.lifted .arm-shadow {
+  opacity: 0.25;
+  transform: translate(16px, 24px);
+}
+/* Troca de faixa / play / pause: varredura mais lenta e suave. */
+.arm.sweep .arm-rot {
+  transition: transform 0.9s cubic-bezier(0.45, 0, 0.25, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disc-spin {
+    animation: none;
+  }
+  .arm-rot,
+  .arm-shadow,
+  .arm.sweep .arm-rot {
+    transition: none;
+  }
+}

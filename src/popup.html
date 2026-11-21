@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flyout — popup</title>
+    <link rel="stylesheet" href="./themes/c2/tokens.css" />
+    <link rel="stylesheet" href="./themes/c2/popup.css" />
+  </head>
+  <!-- data-state: idle (invisível) → in → out. data-hidden: janela escondida (tudo pausado). -->
+  <body data-status="stopped" data-state="idle" data-hidden>
+    <!-- Card 520×120; a janela tem 30px de margem para a sombra. -->
+    <div class="card" id="card" role="status" aria-live="polite">
+      <!-- Disco de 300px, cortado no canto esquerdo (centro em 40,60) -->
+      <div class="disc" aria-hidden="true">
+        <div class="disc-spin">
+          <i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i>
+          <div class="label">
+            <div class="cover" id="cover"></div>
+            <i class="dot"></i>
+            <i class="hole"></i>
+          </div>
+        </div>
+        <div class="disc-gloss"></div>
+      </div>
+
+      <!-- Braço menor: pivô (215, 14) -->
+      <div class="arm" id="arm" aria-hidden="true">
+        <svg class="arm-base" width="30" height="30" viewBox="-15 -15 30 30">
+          <circle r="13.5" fill="#2a251e" stroke="#4a4338" stroke-width="1.5" />
+        </svg>
+        <div class="arm-rot">
+          <svg class="arm-art" width="160" height="40" viewBox="-40 -20 160 40">
+            <defs>
+              <linearGradient id="metal" x1="0" y1="-1" x2="0" y2="1">
+                <stop offset="0" stop-color="#e6dbb8" />
+                <stop offset="0.5" stop-color="#cdbd94" />
+                <stop offset="1" stop-color="#8f8362" />
+              </linearGradient>
+            </defs>
+            <rect x="-14" y="-1.2" width="14" height="2.4" fill="url(#metal)" />
+            <rect x="-34" y="-6" width="20" height="12" rx="3" fill="#2a251e" stroke="#4a4338" stroke-width="1" />
+            <rect x="0" y="-2" width="104" height="4" rx="2" fill="url(#metal)" />
+            <rect x="99" y="-4.5" width="16" height="9" rx="4.5" fill="#2a251e" stroke="#cdbd94" stroke-width="1" />
+            <circle class="arm-dot" cx="108.5" cy="0" r="2" />
+          </svg>
+        </div>
+        <svg class="arm-cap" width="16" height="16" viewBox="-8 -8 16 16">
+          <circle r="7" fill="#cdbd94" stroke="#4a4338" stroke-width="1" />
+          <circle r="2" fill="#2a251e" />
+        </svg>
+      </div>
+
+      <div class="vignette" aria-hidden="true"></div>
+      <div class="grain" aria-hidden="true"></div>
+
+      <div class="text">
+        <h1 id="title">—</h1>
+        <p class="artist" id="artist"></p>
+        <div class="progress" id="progress-row">
+          <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+          <span class="time" id="time"></span>
+        </div>
+      </div>
+
+      <button type="button" class="play" id="btn-play" aria-label="Pausar">
+        <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
+        <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+      </button>
+    </div>
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>

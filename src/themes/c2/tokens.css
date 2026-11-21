@@ -1,0 +1,51 @@
+/* Tokens da skin C2 (toca-discos macro). */
+
+@font-face {
+  font-family: "IM Fell English";
+  src: url("../../assets/fonts/im-fell-english-latin-400-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "IM Fell English";
+  src: url("../../assets/fonts/im-fell-english-latin-400-italic.woff2") format("woff2");
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Krona One";
+  src: url("../../assets/fonts/krona-one-latin-400-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+
+/* Registrada como <color> para a troca de cor (capa nova) poder animar. */
+@property --amber {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #e8a33d;
+}
+
+:root {
+  --bg: #0d0a07;
+  --spot: #2a1c0d;
+  --cream: #efe2c3;
+  --cream-dim: #b8a888;
+  --cream-artist: #d8cba9;
+  /* Destaque: âmbar por padrão; lib/accent.ts troca pela cor da capa. */
+  --amber: #e8a33d;
+  --amber-hover: color-mix(in srgb, var(--amber) 88%, #fff);
+  /* Selo e anel derivados do destaque (com o âmbar padrão ≈ #c98a2b / #b5781f). */
+  --label: color-mix(in srgb, var(--amber) 87%, #000);
+  --label-edge: color-mix(in srgb, var(--amber) 66%, #000);
+  transition: --amber 0.8s ease;
+  --metal: #cdbd94;
+  --arm-base: #2a251e;
+  --arm-base-edge: #4a4338;
+
+  --font-body: "IM Fell English", Georgia, serif;
+  --font-caps: "Krona One", "Segoe UI", sans-serif;
+}

@@ -1,0 +1,342 @@
+/* Popup C2: card 520×120 (raio 14) dentro de uma janela transparente com 30px
+   de margem para a sombra. Só `transform` e `opacity` animam; will-change só no disco. */
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  color: var(--cream);
+  font-family: var(--font-body);
+  user-select: none;
+  cursor: default;
+}
+
+.card {
+  position: absolute;
+  left: 30px;
+  top: 30px;
+  width: 520px;
+  height: 120px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(239, 226, 195, 0.14);
+  background: radial-gradient(ellipse at 22% 45%, var(--spot) 0%, var(--bg) 75%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  /* estado inicial: invisível (antes da 1ª entrada) */
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+/* Entrada e saída */
+body[data-state="in"] .card {
+  animation: card-in 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+body[data-state="out"] .card {
+  animation: card-out 0.28s ease-in forwards;
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes card-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* ---------- Disco (300px, centro em 40,60) ---------- */
+.disc {
+  position: absolute;
+  left: -110px;
+  top: -90px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.disc-spin {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #0d0b08 0 1px, #1c1711 1px 2px);
+  will-change: transform;
+  animation: spin 1.8s linear infinite; /* 33⅓ rpm */
+  animation-play-state: paused;
+}
+body[data-status="playing"]:not([data-hidden]) .disc-spin {
+  animation-play-state: running;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(239, 226, 195, 0.09);
+}
+.r1 { inset: 12px; }
+.r2 { inset: 40px; }
+.r3 { inset: 66px; }
+
+.disc-gloss {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 25deg,
+    transparent 0 6%,
+    rgba(255, 244, 220, 0.1) 11%,
+    transparent 17% 48%,
+    rgba(255, 244, 220, 0.08) 61%,
+    transparent 67% 100%
+  );
+}
+
+/* Selo de 100px com a capa */
+.label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100px;
+  height: 100px;
+  margin: -50px 0 0 -50px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 3px solid var(--label-edge);
+  background: radial-gradient(circle, color-mix(in srgb, var(--amber) 94%, #000), var(--label));
+  overflow: hidden;
+}
+.cover {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+}
+.dot {
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: var(--cream);
+}
+.hole {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: 0 0 0 1.5px rgba(239, 226, 195, 0.35);
+}
+
+/* ---------- Braço (pivô em 215,14; ângulo em --arm, ver lib/arm.ts) ---------- */
+.arm {
+  position: absolute;
+  left: 215px;
+  top: 14px;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  --arm: 127.2deg;
+}
+.arm-base {
+  position: absolute;
+  left: -15px;
+  top: -15px;
+}
+.arm-cap {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+}
+.arm-rot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  transform: rotate(var(--arm));
+  transition: transform 1s linear; /* um passo por segundo */
+}
+.arm-dot {
+  fill: var(--amber); /* ponto da agulha acompanha o destaque */
+}
+.arm-art {
+  position: absolute;
+  left: -40px;
+  top: -20px;
+  overflow: visible;
+}
+.arm.lifted .arm-rot {
+  transform: rotate(var(--arm)) scale(1.03);
+}
+.arm.sweep .arm-rot {
+  transition: transform 0.9s cubic-bezier(0.45, 0, 0.25, 1);
+}
+
+/* ---------- Acabamento (PNGs estáticos) ---------- */
+.vignette,
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.vignette {
+  background: url("../../assets/vignette.png") center / 100% 100% no-repeat;
+}
+.grain {
+  background: url("../../assets/grain.png") 0 0 / 256px 256px repeat;
+  opacity: 0.22;
+}
+
+/* ---------- Texto ---------- */
+/* Borda esquerda deixa folga do braço (a base do pivô vai até x=229, y=28). */
+.text {
+  position: absolute;
+  left: 214px;
+  top: 26px;
+  width: 232px;
+  height: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  pointer-events: none;
+}
+.text h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+.artist {
+  margin: 1px 0 0;
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.25;
+  color: var(--cream-artist);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.artist:empty {
+  display: none;
+}
+.progress {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bar {
+  flex: 1;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(239, 226, 195, 0.18);
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--amber);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  transition: transform 1s linear;
+}
+.time {
+  font: 9px/1 var(--font-caps);
+  letter-spacing: 0.1em;
+  color: var(--cream-dim);
+  font-variant-numeric: tabular-nums;
+}
+/* Sem duração: nada de barra nem tempo. */
+.progress[hidden] {
+  display: none;
+}
+
+/* ---------- Botão ---------- */
+.play {
+  position: absolute;
+  right: 16px;
+  top: 36px;
+  box-sizing: border-box;
+  width: 48px; /* alvo ≥ 44px */
+  height: 48px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--amber);
+  color: var(--bg);
+  cursor: pointer;
+}
+.play:hover {
+  background: var(--amber-hover);
+}
+.play:active {
+  transform: scale(0.94);
+}
+.play:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 3px;
+}
+.play svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+.play .i-play {
+  display: none;
+}
+body:not([data-status="playing"]) .play .i-pause {
+  display: none;
+}
+body:not([data-status="playing"]) .play .i-play {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disc-spin {
+    animation: none;
+  }
+  .arm-rot,
+  .arm.sweep .arm-rot,
+  .bar i {
+    transition: none;
+  }
+  /* entrada/saída só com fade */
+  @keyframes card-in {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes card-out {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: none; }
+  }
+}

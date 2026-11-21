@@ -1,0 +1,410 @@
+/* Layout do painel C2 no palco de 1280px de largura. Janela larga (≥ 1,2:1):
+   palco 1280×720 escalado para caber. Janela alta (monitor vertical): palco com
+   1280px de largura e altura proporcional (--stage-h); o disco e o braço ficam no
+   topo, como no layout largo, e o texto e os controles descem para a base. */
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 30% 40%, var(--spot) 0%, var(--bg) 68%);
+  color: var(--cream);
+  font-family: var(--font-body);
+  user-select: none;
+  cursor: default;
+}
+
+.stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: var(--stage-h, 720px);
+  /* Sem overflow:hidden: o disco continua para fora do palco quando a janela não tem a
+     proporção dele (a janela, não o palco, é quem recorta) — sem borda dura nas faixas. */
+  transform-origin: 0 0;
+  transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--s, 1));
+}
+
+/* Acabamento estático (PNGs pré-renderizados, sem filtro nem blend). */
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 4; /* acima do palco, abaixo do grão */
+  pointer-events: none;
+  background: url("../../assets/vignette.png") center / 100% 100% no-repeat;
+}
+/* Grão de filme sobre a JANELA inteira (inclusive as faixas fora do palco), em
+   pixels reais: o tamanho do grão não muda com a escala do palco. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 5; /* acima do palco, abaixo da barra de cima */
+  pointer-events: none;
+  background: url("../../assets/grain.png") 0 0 / 256px 256px repeat;
+  opacity: 0.2;
+}
+
+/* ---------- Texto ---------- */
+/* Bloco no canto inferior direito, ancorado embaixo e crescendo para cima.
+   A borda esquerda (x=1010) deixa folga do braço na posição inicial (a mais à
+   direita): x_braço(y) = 1130 − 0,4368·(y − 90) → ≈ 985 em y=422, 1000 em y=387. */
+.info {
+  position: absolute;
+  left: 1010px;
+  top: 330px;
+  width: 222px;
+  height: 282px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+:where(.info p, .info h1) {
+  margin: 0; /* :where → especificidade 0, não atropela as margens abaixo */
+}
+.eyebrow {
+  font: 11px/1.2 var(--font-caps);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.info h1 {
+  margin-top: 10px;
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.info h1.long {
+  font-size: 32px;
+}
+.info h1.longer {
+  font-size: 26px;
+}
+.artist {
+  margin-top: 10px;
+  font-size: 22px;
+  font-style: italic;
+  line-height: 1.2;
+  color: var(--cream-artist);
+}
+.album {
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.25;
+  color: var(--cream-dim);
+}
+.time {
+  margin-top: 12px;
+  font: 11px/1 var(--font-caps);
+  letter-spacing: 0.12em;
+  color: var(--cream-dim);
+  font-variant-numeric: tabular-nums;
+}
+.info p:empty {
+  display: none;
+}
+
+/* ---------- Controles ---------- */
+.controls {
+  position: absolute;
+  right: 48px;
+  bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.controls button {
+  box-sizing: border-box;
+  width: 48px; /* alvo ≥ 44px */
+  height: 48px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(239, 226, 195, 0.25);
+  border-radius: 50%;
+  background: rgba(13, 10, 7, 0.55);
+  color: var(--cream);
+  cursor: pointer;
+}
+.controls button:not(:disabled):hover {
+  border-color: var(--amber);
+}
+.controls button.primary:not(:disabled):hover {
+  background: var(--amber-hover);
+}
+.controls button:not(:disabled):active {
+  transform: scale(0.94);
+}
+.controls button:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 3px;
+}
+.controls button:disabled {
+  cursor: default;
+  opacity: 0.35; /* sem sessão de mídia */
+}
+.controls button.primary {
+  width: 56px;
+  height: 56px;
+  border-color: var(--amber);
+  background: var(--amber);
+  color: var(--bg);
+}
+.controls svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+.controls .i-play {
+  display: none;
+}
+body:not([data-status="playing"]) .controls .i-pause {
+  display: none;
+}
+body:not([data-status="playing"]) .controls .i-play {
+  display: block;
+}
+
+/* ---------- Letra sincronizada ---------- */
+/* Layout largo: duas linhas (atual + próxima) no canto inferior esquerdo, abaixo do
+   selo (que termina em y≈610) e à esquerda do braço (em y≥620 ele está em x≤900). */
+.lyrics {
+  position: absolute;
+  left: 56px;
+  bottom: 26px;
+  width: 780px;
+  pointer-events: none;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+.lyrics .s {
+  margin: 0;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.lyrics .s:empty {
+  display: none;
+}
+.lyrics .s-1,
+.lyrics .s2 {
+  display: none; /* só no layout alto */
+}
+.lyrics .s0 {
+  font-size: 34px;
+  color: var(--cream-dim);
+  word-spacing: 0.12em; /* as palavras acesas ficam um pouco mais largas (traço + escala) */
+}
+.lyrics .s1 {
+  margin-top: 4px;
+  font-size: 21px;
+  color: var(--cream-dim);
+  opacity: 0.8;
+}
+
+/* Brilho palavra por palavra (lib/lyrics.ts).
+   Cada palavra tem duas camadas: o texto base (apagado) e um ::after aceso, com
+   traço (parece mais pesado) e brilho na cor de destaque. O ::after só muda de
+   `opacity`, e a palavra cresce de leve com `transform`; o `--d` de cada palavra
+   (transition-delay) faz o acendimento seguir a música. */
+.lyrics .s0 .w {
+  position: relative;
+  display: inline-block;
+  white-space: pre;
+  transform-origin: 50% 80%;
+  transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d, 0ms);
+}
+.lyrics .s0 .w::after {
+  content: attr(data-t);
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--cream);
+  -webkit-text-stroke: 0.03em var(--cream); /* "peso" extra nas palavras acesas */
+  text-shadow:
+    0 0 0.4em color-mix(in srgb, var(--amber) 80%, transparent),
+    0 0 1em color-mix(in srgb, var(--amber) 45%, transparent);
+  opacity: 0;
+  transition: opacity 0.24s ease var(--d, 0ms);
+}
+.lyrics .s0 .w.on {
+  transform: scale(1.025);
+}
+.lyrics .s0 .w.on::after {
+  opacity: 1;
+}
+/* Pausado (ou sem animação): estado final direto, sem transição. */
+.lyrics .s0.static .w,
+.lyrics .s0.static .w::after {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lyrics .s0 .w,
+  .lyrics .s0 .w::after {
+    transition: none;
+  }
+}
+body[data-hidden] .lyrics {
+  display: none;
+}
+
+/* ---------- Barra de cima: minimizar ---------- */
+/* Fora do palco, em px reais da janela (não escala). Discreto até o mouse chegar. */
+.chrome {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 76px;
+  padding-top: 16px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 12px;
+  z-index: 10;
+}
+.chrome .i-grow,
+body[data-mode="free"] .chrome .i-shrink {
+  display: none;
+}
+body[data-mode="free"] .chrome .i-grow {
+  display: block;
+}
+.chrome button {
+  box-sizing: border-box;
+  width: 48px; /* alvo ≥ 44px */
+  height: 48px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(239, 226, 195, 0.25);
+  border-radius: 50%;
+  background: rgba(13, 10, 7, 0.55);
+  color: var(--cream);
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+.chrome:hover button,
+.chrome button:focus-visible {
+  opacity: 1;
+}
+.chrome button:hover {
+  border-color: var(--amber);
+}
+.chrome button:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 3px;
+}
+.chrome svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+body[data-hidden] .chrome {
+  display: none;
+}
+/* Janela livre: a faixa de cima é a alça de arrastar (indicada por um traço sutil). */
+body[data-mode="free"] .chrome {
+  cursor: grab;
+}
+body[data-mode="free"] .chrome button {
+  cursor: pointer;
+}
+
+/* ---------- Layout alto (janela vertical) ---------- */
+/* Tudo em unidades do palco (1280 de largura), com tipografia maior porque o
+   texto agora tem a largura toda e não precisa desviar do braço. */
+body[data-layout="tall"] .info {
+  left: 96px;
+  right: 96px;
+  top: auto;
+  bottom: 300px;
+  width: auto;
+  height: auto;
+  display: block;
+}
+body[data-layout="tall"] .eyebrow {
+  font-size: 20px;
+}
+body[data-layout="tall"] .info h1 {
+  margin-top: 18px;
+  font-size: 80px;
+}
+body[data-layout="tall"] .info h1.long {
+  font-size: 64px;
+}
+body[data-layout="tall"] .info h1.longer {
+  font-size: 50px;
+}
+body[data-layout="tall"] .artist {
+  margin-top: 16px;
+  font-size: 42px;
+}
+body[data-layout="tall"] .album {
+  margin-top: 8px;
+  font-size: 26px;
+}
+body[data-layout="tall"] .time {
+  margin-top: 22px;
+  font-size: 20px;
+}
+/* Letra no miolo vazio entre o disco (termina em y≈970) e o texto da faixa. */
+body[data-layout="tall"] .lyrics {
+  left: 96px;
+  right: 96px;
+  width: auto;
+  top: 1080px;
+  bottom: auto;
+}
+body[data-layout="tall"] .lyrics .s-1,
+body[data-layout="tall"] .lyrics .s2 {
+  display: block;
+}
+body[data-layout="tall"] .lyrics .s-1 {
+  font-size: 34px;
+  color: var(--cream-dim);
+  opacity: 0.55;
+}
+body[data-layout="tall"] .lyrics .s0 {
+  margin: 24px 0;
+  font-size: 64px;
+  line-height: 1.2;
+}
+body[data-layout="tall"] .lyrics .s1 {
+  margin-top: 8px;
+  font-size: 34px;
+}
+body[data-layout="tall"] .lyrics .s2 {
+  margin-top: 8px;
+  font-size: 34px;
+  color: var(--cream-dim);
+  opacity: 0.55;
+}
+body[data-layout="tall"] .controls {
+  left: 96px;
+  right: auto;
+  bottom: 120px;
+  gap: 24px;
+}
+body[data-layout="tall"] .controls button {
+  width: 88px;
+  height: 88px;
+}
+body[data-layout="tall"] .controls button.primary {
+  width: 104px;
+  height: 104px;
+}
+body[data-layout="tall"] .controls svg {
+  width: 40px;
+  height: 40px;
+}

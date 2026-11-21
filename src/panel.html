@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flyout — painel</title>
+    <link rel="stylesheet" href="./themes/c2/tokens.css" />
+    <link rel="stylesheet" href="./themes/c2/record.css" />
+    <link rel="stylesheet" href="./themes/c2/panel.css" />
+  </head>
+  <body data-status="stopped">
+    <!-- Palco de referência 1280×720, escalado por JS para qualquer janela. -->
+    <div class="stage" id="stage">
+      <!-- Disco -->
+      <div class="disc-shadow" aria-hidden="true"></div>
+      <div class="disc" aria-hidden="true">
+        <div class="disc-spin">
+          <i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i>
+          <div class="label">
+            <div class="cover" id="cover"></div>
+            <i class="dot"></i>
+            <i class="hole"></i>
+          </div>
+        </div>
+        <div class="disc-gloss"></div>
+      </div>
+
+      <!-- Braço da agulha: base, braço (gira com o progresso), tampa do pivô -->
+      <div class="arm" id="arm" aria-hidden="true">
+        <svg class="arm-base" width="128" height="128" viewBox="-64 -64 128 128">
+          <circle r="62" fill="#2a251e" stroke="#4a4338" stroke-width="4" />
+          <circle r="42" fill="none" stroke="#4a4338" stroke-width="2" />
+        </svg>
+        <div class="arm-shadow">
+          <div class="arm-rot">
+            <svg class="arm-art" width="780" height="60" viewBox="-130 -30 780 60">
+              <rect x="-122" y="-18" width="68" height="36" rx="8" fill="#000" />
+              <rect x="-54" y="-3" width="54" height="6" fill="#000" />
+              <rect x="0" y="-4.5" width="600" height="9" rx="4.5" fill="#000" />
+              <rect x="596" y="-9" width="44" height="18" rx="9" fill="#000" />
+            </svg>
+          </div>
+        </div>
+        <div class="arm-rot">
+          <svg class="arm-art" width="780" height="60" viewBox="-130 -30 780 60">
+            <defs>
+              <linearGradient id="metal" x1="0" y1="-1" x2="0" y2="1">
+                <stop offset="0" stop-color="#e6dbb8" />
+                <stop offset="0.45" stop-color="#cdbd94" />
+                <stop offset="1" stop-color="#8f8362" />
+              </linearGradient>
+            </defs>
+            <!-- contrapeso + haste traseira -->
+            <rect x="-54" y="-3" width="54" height="6" fill="url(#metal)" />
+            <rect x="-122" y="-18" width="68" height="36" rx="8" fill="#2a251e" stroke="#4a4338" stroke-width="2" />
+            <path d="M-104 -14V14M-94 -14V14M-84 -14V14M-74 -14V14" stroke="#4a4338" stroke-width="2" />
+            <!-- tubo -->
+            <rect x="0" y="-4.5" width="600" height="9" rx="4.5" fill="url(#metal)" />
+            <rect x="8" y="-2.8" width="584" height="1.4" rx="0.7" fill="#fff" opacity="0.3" />
+            <!-- headshell + ponto âmbar -->
+            <rect x="596" y="-9" width="44" height="18" rx="9" fill="#2a251e" stroke="#cdbd94" stroke-width="1.5" />
+            <circle class="arm-dot" cx="624" cy="0" r="4.5" />
+          </svg>
+        </div>
+        <svg class="arm-cap" width="64" height="64" viewBox="-32 -32 64 64">
+          <defs>
+            <radialGradient id="cap" cx="0.4" cy="0.35" r="0.8">
+              <stop offset="0" stop-color="#ece1c0" />
+              <stop offset="0.55" stop-color="#cdbd94" />
+              <stop offset="1" stop-color="#7d7152" />
+            </radialGradient>
+          </defs>
+          <circle r="28" fill="url(#cap)" stroke="#4a4338" stroke-width="2" />
+          <circle r="7" fill="#2a251e" />
+        </svg>
+      </div>
+
+      <!-- Letra sincronizada (só aparece quando há letra) -->
+      <section class="lyrics" id="lyrics" hidden aria-label="Letra">
+        <p class="s s-1"></p>
+        <p class="s s0"></p>
+        <p class="s s1"></p>
+        <p class="s s2"></p>
+      </section>
+
+      <!-- Texto, à direita do braço -->
+      <section class="info" aria-live="polite">
+        <p class="eyebrow" id="status">AGUARDANDO</p>
+        <h1 id="title">—</h1>
+        <p class="artist" id="artist"></p>
+        <p class="album" id="album"></p>
+        <p class="time" id="time"></p>
+      </section>
+
+      <!-- Controles: habilitados quando há uma sessão de mídia -->
+      <div class="controls">
+        <button type="button" id="btn-prev" aria-label="Faixa anterior" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9.5 12z" /></svg>
+        </button>
+        <button type="button" id="btn-play" class="primary" aria-label="Pausar" disabled>
+          <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
+          <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+        </button>
+        <button type="button" id="btn-next" aria-label="Próxima faixa" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z" /></svg>
+        </button>
+      </div>
+    </div>
+    <!-- Acabamento: vinheta (PNG pré-renderizado, estático) sobre a janela inteira, não só o palco -->
+    <div class="vignette" aria-hidden="true"></div>
+    <!-- Grão de filme (PNG tileável) sobre a janela inteira -->
+    <div class="grain" aria-hidden="true"></div>
+    <!-- Barra de cima (fora do palco: fica no topo da janela, em qualquer escala) -->
+    <div class="chrome" id="chrome">
+      <button type="button" id="btn-min" aria-label="Minimizar painel" title="Minimizar painel">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" /></svg>
+      </button>
+      <button type="button" id="btn-size" aria-label="Diminuir janela" title="Diminuir janela">
+        <!-- ocupando o monitor: ícone "restaurar" (dois quadrados); janela livre: "ampliar" (um quadrado) -->
+        <svg class="i-shrink" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4.5" y="8.5" width="11" height="11" rx="1" /><path d="M9 8.5V5.5h10.5v10.5H16" />
+        </svg>
+        <svg class="i-grow" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="1.5" /></svg>
+      </button>
+    </div>
+    <script type="module" src="./panel.ts"></script>
+  </body>
+</html>
