@@ -93,6 +93,50 @@ body[data-status="playing"]:not([data-hidden]) .disc-spin {
 .r2 { inset: 40px; }
 .r3 { inset: 66px; }
 
+/* Efeitos do disco (body[data-fx]): camadas que giram junto com o disco. */
+.sheen,
+.specks {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  display: none;
+}
+body[data-fx="soft"] .sheen,
+body[data-fx="soft"] .specks,
+body[data-fx="strong"] .sheen,
+body[data-fx="strong"] .specks {
+  display: block;
+}
+.sheen {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 7%,
+    rgba(255, 244, 220, 0.16) 12%,
+    transparent 18% 40%,
+    rgba(255, 244, 220, 0.11) 47%,
+    transparent 53% 74%,
+    rgba(255, 244, 220, 0.13) 79%,
+    transparent 85% 100%
+  );
+  opacity: 0.45;
+}
+.specks {
+  background:
+    radial-gradient(circle at 14% 30%, rgba(239, 226, 195, 0.6) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 82% 22%, rgba(239, 226, 195, 0.5) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 91% 61%, rgba(239, 226, 195, 0.55) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 70% 88%, rgba(239, 226, 195, 0.5) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 28% 84%, rgba(239, 226, 195, 0.6) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 9% 56%, rgba(239, 226, 195, 0.45) 0 1px, transparent 1.6px),
+    conic-gradient(from 200deg, transparent 0 0.3%, rgba(255, 244, 220, 0.3) 0.35% 0.55%, transparent 0.6% 100%);
+  opacity: 0.55;
+}
+body[data-fx="strong"] .sheen,
+body[data-fx="strong"] .specks {
+  opacity: 1;
+}
+
 .disc-gloss {
   position: absolute;
   inset: 0;
@@ -188,6 +232,26 @@ body[data-status="playing"]:not([data-hidden]) .disc-spin {
   left: -40px;
   top: -20px;
   overflow: visible;
+  transform-origin: 40px 20px; /* o pivô: o tremor gira em torno dele */
+}
+@keyframes arm-wobble {
+  0%,
+  100% {
+    transform: rotate(calc(var(--wob) * -1));
+  }
+  50% {
+    transform: rotate(var(--wob));
+  }
+}
+body[data-fx="soft"] {
+  --wob: 0.3deg;
+}
+body[data-fx="strong"] {
+  --wob: 0.8deg;
+}
+body[data-fx="soft"][data-status="playing"]:not([data-hidden]) .arm-art,
+body[data-fx="strong"][data-status="playing"]:not([data-hidden]) .arm-art {
+  animation: arm-wobble 1.8s ease-in-out infinite;
 }
 .arm.lifted .arm-rot {
   transform: rotate(var(--arm)) scale(1.03);
@@ -356,8 +420,9 @@ body:not([data-status="playing"]) .play .i-play {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .disc-spin {
-    animation: none;
+  .disc-spin,
+  .arm-art {
+    animation: none !important;
   }
   .arm-rot,
   .arm.sweep .arm-rot,

@@ -46,6 +46,58 @@ body[data-status="playing"]:not([data-hidden]) .disc-spin {
 .r2 { inset: 130px; }
 .r3 { inset: 210px; }
 
+/* ---------- Efeitos do disco (body[data-fx]: off | soft | strong) ----------
+   Camadas DENTRO do disco que gira: giram junto, de graça (nenhuma animação nova).
+   O brilho estático (.disc-gloss) fica parado e o desta camada passa por ele: dá a
+   impressão de vinil rodando. */
+.sheen,
+.specks {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  display: none;
+}
+body[data-fx="soft"] .sheen,
+body[data-fx="soft"] .specks,
+body[data-fx="strong"] .sheen,
+body[data-fx="strong"] .specks {
+  display: block;
+}
+.sheen {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 7%,
+    rgba(255, 244, 220, 0.16) 12%,
+    transparent 18% 40%,
+    rgba(255, 244, 220, 0.11) 47%,
+    transparent 53% 74%,
+    rgba(255, 244, 220, 0.13) 79%,
+    transparent 85% 100%
+  );
+  opacity: 0.45;
+}
+/* Poeirinhas e um risco: marcas que passam à vista quando o disco gira. */
+.specks {
+  background:
+    radial-gradient(circle at 14% 30%, rgba(239, 226, 195, 0.6) 0 2.5px, transparent 3.5px),
+    radial-gradient(circle at 82% 22%, rgba(239, 226, 195, 0.5) 0 2px, transparent 3px),
+    radial-gradient(circle at 91% 61%, rgba(239, 226, 195, 0.55) 0 3px, transparent 4px),
+    radial-gradient(circle at 70% 88%, rgba(239, 226, 195, 0.5) 0 2px, transparent 3px),
+    radial-gradient(circle at 28% 84%, rgba(239, 226, 195, 0.6) 0 2.5px, transparent 3.5px),
+    radial-gradient(circle at 9% 56%, rgba(239, 226, 195, 0.45) 0 2px, transparent 3px),
+    radial-gradient(circle at 60% 10%, rgba(239, 226, 195, 0.5) 0 2.5px, transparent 3.5px),
+    radial-gradient(circle at 38% 94%, rgba(239, 226, 195, 0.45) 0 2px, transparent 3px),
+    conic-gradient(from 200deg, transparent 0 0.3%, rgba(255, 244, 220, 0.3) 0.35% 0.5%, transparent 0.55% 100%);
+  opacity: 0.55;
+}
+body[data-fx="strong"] .sheen {
+  opacity: 1;
+}
+body[data-fx="strong"] .specks {
+  opacity: 1;
+}
+
 /* Brilho do vinil: estático, não gira. */
 .disc-gloss {
   position: absolute;
@@ -146,6 +198,27 @@ body[data-status="playing"]:not([data-hidden]) .disc-spin {
   left: -130px;
   top: -30px;
   overflow: visible;
+  transform-origin: 130px 30px; /* o pivô: o tremor gira em torno dele */
+}
+/* Tremor do braço seguindo os sulcos (uma volta do disco = 1,8 s). Só tocando. */
+@keyframes arm-wobble {
+  0%,
+  100% {
+    transform: rotate(calc(var(--wob) * -1));
+  }
+  50% {
+    transform: rotate(var(--wob));
+  }
+}
+body[data-fx="soft"] {
+  --wob: 0.12deg;
+}
+body[data-fx="strong"] {
+  --wob: 0.32deg;
+}
+body[data-fx="soft"][data-status="playing"]:not([data-hidden]) .arm-art,
+body[data-fx="strong"][data-status="playing"]:not([data-hidden]) .arm-art {
+  animation: arm-wobble 1.8s ease-in-out infinite;
 }
 
 /* Sombra do braço: cópia escura deslocada em espaço de tela. */
@@ -173,9 +246,19 @@ body[data-status="playing"]:not([data-hidden]) .disc-spin {
   transition: transform 0.9s cubic-bezier(0.45, 0, 0.25, 1);
 }
 
+/* ---------- Grupo disco + braço (a moldura de toca-discos o encolhe) ---------- */
+.turntable {
+  position: absolute;
+  inset: 0;
+}
+.platter {
+  display: none; /* só no modo moldura (panel.css) */
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .disc-spin {
-    animation: none;
+  .disc-spin,
+  .arm-art {
+    animation: none !important;
   }
   .arm-rot,
   .arm-shadow,

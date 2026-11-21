@@ -1,6 +1,7 @@
 import { applyAccent } from "./lib/accent";
 import { armAngle, POPUP_ARM, setArm } from "./lib/arm";
 import { setCover } from "./lib/disc";
+import { initDiskFx } from "./lib/fx";
 import { getState, next, onNowPlaying, onPopupLeave, onPopupVisible, previous, togglePlayPause } from "./lib/ipc";
 import { formatTime, livePositionMs, type NowPlaying } from "./lib/state";
 
@@ -89,6 +90,7 @@ function setVisible(v: boolean) {
   syncTimer();
 }
 
+initDiskFx();
 void onNowPlaying(render);
 void onPopupVisible(setVisible);
 void onPopupLeave(() => {

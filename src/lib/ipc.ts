@@ -33,6 +33,12 @@ export const onPopupVisible = (cb: (visible: boolean) => void): Promise<Unlisten
 export const onPopupLeave = (cb: () => void): Promise<UnlistenFn> =>
   listen("popup-leave", () => cb());
 
+/** Efeitos do disco: "off" | "soft" | "strong" (menu da bandeja). */
+export type DiskFx = "off" | "soft" | "strong";
+export const getDiskFx = () => invoke<DiskFx>("get_disk_fx");
+export const onDiskFx = (cb: (level: DiskFx) => void): Promise<UnlistenFn> =>
+  listen<DiskFx>("disk-fx", (e) => cb(e.payload));
+
 /** Modo de janela livre (arrastar/redimensionar) ligado? */
 export const isPanelFree = () => invoke<boolean>("panel_is_free");
 export const onPanelFree = (cb: (free: boolean) => void): Promise<UnlistenFn> =>

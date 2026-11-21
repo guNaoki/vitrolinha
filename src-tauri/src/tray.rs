@@ -4,7 +4,7 @@
 
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::AppHandle;
+use tauri::{AppHandle, Emitter};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::settings::{self, MonitorRef};
@@ -24,6 +24,7 @@ const ID_AUTOSTART: &str = "autostart";
 const ID_QUIT: &str = "quit";
 const PREFIX_MONITOR: &str = "monitor:";
 const PREFIX_SOURCE: &str = "source:";
+const PREFIX_FX: &str = "fx:";
 const PREFIX_POSITION: &str = "popup-pos:";
 const PREFIX_DURATION: &str = "popup-dur:";
 
@@ -147,6 +148,16 @@ fn source_menu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
     Ok(menu)
 }
 
+/// "Efeitos do disco": intensidade do brilho que gira, dos riscos e do tremor do braço.
+fn fx_menu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
+    let current = settings::disk_fx(app);
+    let menu = Submenu::with_id(app, "fx", "Efeitos do disco", true)?;
+    for (value, label) in [("off", "Desligados"), ("soft", "Suaves"), ("strong", "Fortes")] {
+        menu.append(&check(app, &format!("{PREFIX_FX}{value}"), label, current == value)?)?;
+    }
+    Ok(menu)
+}
+
 fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let dynamic = check(app, ID_DYNAMIC_COLOR, "Cor de destaque da capa", settings::dynamic_color(app))?;
     let lyrics = check(app, ID_LYRICS, "Letras sincronizadas (consulta lrclib.net)", settings::lyrics_enabled(app))?;
@@ -165,6 +176,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &source_menu(app)?,
             &popup_menu(app)?,
             &panel_menu(app)?,
+            &fx_menu(app)?,
             &dynamic,
             &lyrics,
             &hd_cover,
@@ -210,6 +222,9 @@ fn on_menu(app: &AppHandle, id: &str) {
             if let Some(source) = id.strip_prefix(PREFIX_SOURCE) {
                 // "source:" vazio = todos os apps
                 media::set_source(app, (!source.is_empty()).then(|| source.to_string()));
+            } else if let Some(level) = id.strip_prefix(PREFIX_FX).filter(|l| settings::DISK_FX_LEVELS.contains(l)) {
+                settings::set_disk_fx(app, level);
+                let _ = app.emit("disk-fx", level); // painel e popup aplicam na hora
             } else if let Some(pos) = id.strip_prefix(PREFIX_POSITION) {
                 settings::set_popup_position(app, pos);
             } else if let Some(ms) = id.strip_prefix(PREFIX_DURATION).and_then(|v| v.parse().ok()) {

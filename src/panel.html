@@ -10,12 +10,17 @@
   </head>
   <body data-status="stopped">
     <!-- Palco de referência 1280×720, escalado por JS para qualquer janela. -->
+    <!-- Moldura de toca-discos (só na janela livre): madeira, parafusos e a placa do painel -->
+    <div class="deck-frame" id="deck-frame" aria-hidden="true"><div class="deck-plate"></div></div>
     <div class="stage" id="stage">
-      <!-- Disco -->
+      <!-- Disco + braço: no modo moldura este grupo encolhe para o disco aparecer inteiro -->
+      <div class="turntable" id="turntable">
+      <div class="platter" aria-hidden="true"></div>
       <div class="disc-shadow" aria-hidden="true"></div>
       <div class="disc" aria-hidden="true">
         <div class="disc-spin">
           <i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i>
+          <i class="sheen"></i><i class="specks"></i>
           <div class="label">
             <div class="cover" id="cover"></div>
             <i class="dot"></i>
@@ -74,6 +79,7 @@
           <circle r="7" fill="#2a251e" />
         </svg>
       </div>
+      </div><!-- /turntable -->
 
       <!-- Letra sincronizada (só aparece quando há letra) -->
       <section class="lyrics" id="lyrics" hidden aria-label="Letra">

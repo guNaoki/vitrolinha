@@ -20,10 +20,9 @@
         "height": 720,
         "visible": false,
         "decorations": false,
-        "transparent": false,
+        "transparent": true,
         "shadow": false,
-        "resizable": false,
-        "backgroundColor": "#0d0a07"
+        "resizable": false
       },
       {
         "label": "popup",

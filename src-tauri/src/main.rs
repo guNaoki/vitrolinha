@@ -58,6 +58,12 @@ fn minimize_panel(app: tauri::AppHandle) {
     }
 }
 
+/// Nível dos efeitos do disco ("off" | "soft" | "strong"); mudanças chegam pelo evento `disk-fx`.
+#[tauri::command]
+fn get_disk_fx(app: tauri::AppHandle) -> String {
+    settings::disk_fx(&app)
+}
+
 /// Botão "diminuir/ampliar": alterna entre ocupar o monitor inteiro e a janela livre.
 #[tauri::command]
 fn toggle_panel_size(app: tauri::AppHandle) {
@@ -91,6 +97,7 @@ fn main() {
             previous,
             minimize_panel,
             toggle_panel_size,
+            get_disk_fx,
             panel_is_free
         ])
         .on_window_event(|window, event| {

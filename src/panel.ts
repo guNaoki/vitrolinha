@@ -1,6 +1,7 @@
 import { applyAccent } from "./lib/accent";
 import { armAngle, PANEL_ARM, setArm } from "./lib/arm";
 import { setCover } from "./lib/disc";
+import { initDiskFx } from "./lib/fx";
 import {
   getLyrics,
   getState,
@@ -64,14 +65,21 @@ const TALL_BELOW = 1.2;
  *   de virar uma faixa 16:9 no meio da tela.
  */
 function fit() {
-  const tall = innerWidth / innerHeight < TALL_BELOW;
-  const s = tall ? innerWidth / REF_W : Math.min(innerWidth / REF_W, innerHeight / REF_H);
+  // Moldura de toca-discos (janela livre): sempre o layout largo, dentro da moldura.
+  const deck = document.documentElement.dataset.frame === "deck";
+  const tall = !deck && innerWidth / innerHeight < TALL_BELOW;
+  const bezel = deck ? Math.max(10, Math.min(24, Math.round(Math.min(innerWidth, innerHeight) * 0.035))) : 0;
+  const pad = deck ? bezel + 6 : 0; // folga entre a borda da placa e o palco
+  const availW = innerWidth - 2 * pad;
+  const availH = innerHeight - 2 * pad;
+  const s = tall ? innerWidth / REF_W : Math.min(availW / REF_W, availH / REF_H);
   const stageH = tall ? innerHeight / s : REF_H;
   const root = document.documentElement.style;
   root.setProperty("--s", String(s));
   root.setProperty("--stage-h", `${stageH}px`);
-  root.setProperty("--tx", `${(innerWidth - REF_W * s) / 2}px`);
-  root.setProperty("--ty", `${tall ? 0 : (innerHeight - REF_H * s) / 2}px`);
+  root.setProperty("--bezel", `${bezel}px`);
+  root.setProperty("--tx", `${tall ? 0 : pad + (availW - REF_W * s) / 2}px`);
+  root.setProperty("--ty", `${tall ? 0 : pad + (availH - REF_H * s) / 2}px`);
   document.body.dataset.layout = tall ? "tall" : "wide";
 }
 
@@ -229,6 +237,11 @@ applyLyricsHidden();
 function applyFree(free: boolean) {
   document.body.dataset.mode = free ? "free" : "fill";
   $("chrome").toggleAttribute("data-tauri-drag-region", free);
+  // Janela livre = moldura de toca-discos, que também serve de alça de arrastar.
+  document.documentElement.dataset.frame = free ? "deck" : "flat";
+  $("deck-frame").toggleAttribute("data-tauri-drag-region", free);
+  document.querySelector(".deck-plate")!.toggleAttribute("data-tauri-drag-region", free);
+  fit();
   const size = $("btn-size");
   const label = free ? "Ocupar o monitor inteiro" : "Diminuir janela";
   size.setAttribute("aria-label", label);
@@ -238,6 +251,7 @@ void onPanelFree(applyFree);
 void isPanelFree().then(applyFree);
 
 addEventListener("resize", fit);
+initDiskFx();
 fit();
 
 void onNowPlaying(render);

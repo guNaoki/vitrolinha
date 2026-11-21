@@ -71,6 +71,18 @@ pub fn set_lyrics_enabled(app: &AppHandle, on: bool) {
     set(app, "lyricsEnabled", json!(on));
 }
 
+/// Efeitos do disco (brilho que gira, riscos, tremor do braço): "off" | "soft" | "strong".
+/// (padrão: soft)
+pub const DISK_FX_LEVELS: [&str; 3] = ["off", "soft", "strong"];
+pub fn disk_fx(app: &AppHandle) -> String {
+    get::<String>(app, "diskFx")
+        .filter(|v| DISK_FX_LEVELS.contains(&v.as_str()))
+        .unwrap_or_else(|| "soft".into())
+}
+pub fn set_disk_fx(app: &AppHandle, level: &str) {
+    set(app, "diskFx", json!(level));
+}
+
 /// Busca a capa em alta resolução no iTunes quando a do player é pequena (padrão: sim).
 pub fn hd_cover(app: &AppHandle) -> bool {
     get(app, "hdCover").unwrap_or(true)
