@@ -9,7 +9,7 @@
   </head>
   <!-- data-state: idle (invisível) → in → out. data-hidden: janela escondida (tudo pausado). -->
   <body data-status="stopped" data-state="idle" data-hidden>
-    <!-- Card 520×120; a janela tem 30px de margem para a sombra. -->
+    <!-- Card 616×120; a janela tem 30px de margem para a sombra. -->
     <div class="card" id="card" role="status" aria-live="polite">
       <!-- Disco de 300px, cortado no canto esquerdo (centro em 40,60) -->
       <div class="disc" aria-hidden="true">
@@ -63,10 +63,18 @@
         </div>
       </div>
 
-      <button type="button" class="play" id="btn-play" aria-label="Pausar">
-        <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
-        <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-      </button>
+      <div class="controls">
+        <button type="button" class="skip" id="btn-prev" aria-label="Faixa anterior">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9.5 12z" /></svg>
+        </button>
+        <button type="button" class="play" id="btn-play" aria-label="Pausar">
+          <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
+          <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+        </button>
+        <button type="button" class="skip" id="btn-next" aria-label="Próxima faixa">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z" /></svg>
+        </button>
+      </div>
     </div>
     <script type="module" src="./popup.ts"></script>
   </body>

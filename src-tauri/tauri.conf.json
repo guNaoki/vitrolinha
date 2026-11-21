@@ -29,7 +29,7 @@
         "label": "popup",
         "title": "Flyout — popup",
         "url": "popup.html",
-        "width": 580,
+        "width": 676,
         "height": 180,
         "visible": false,
         "transparent": true,

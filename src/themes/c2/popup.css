@@ -1,4 +1,4 @@
-/* Popup C2: card 520×120 (raio 14) dentro de uma janela transparente com 30px
+/* Popup C2: card 616×120 (raio 14) dentro de uma janela transparente com 30px
    de margem para a sombra. Só `transform` e `opacity` animam; will-change só no disco. */
 html,
 body {
@@ -16,7 +16,7 @@ body {
   position: absolute;
   left: 30px;
   top: 30px;
-  width: 520px;
+  width: 616px;
   height: 120px;
   box-sizing: border-box;
   overflow: hidden;
@@ -217,7 +217,7 @@ body[data-status="playing"]:not([data-hidden]) .disc-spin {
   position: absolute;
   left: 214px;
   top: 26px;
-  width: 232px;
+  width: 236px;
   height: 72px;
   display: flex;
   flex-direction: column;
@@ -279,11 +279,45 @@ body[data-status="playing"]:not([data-hidden]) .disc-spin {
   display: none;
 }
 
-/* ---------- Botão ---------- */
-.play {
+/* ---------- Botões: anterior · tocar/pausar · próxima ---------- */
+.controls {
   position: absolute;
   right: 16px;
   top: 36px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.skip {
+  box-sizing: border-box;
+  width: 40px; /* alvo ≥ 40px; o principal tem 48 */
+  height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(239, 226, 195, 0.25);
+  border-radius: 50%;
+  background: rgba(13, 10, 7, 0.55);
+  color: var(--cream);
+  cursor: pointer;
+}
+.skip:hover {
+  border-color: var(--amber);
+}
+.skip:active {
+  transform: scale(0.94);
+}
+.skip:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 3px;
+}
+.skip svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.play {
   box-sizing: border-box;
   width: 48px; /* alvo ≥ 44px */
   height: 48px;

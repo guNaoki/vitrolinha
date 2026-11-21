@@ -15,7 +15,7 @@ use crate::{fullscreen, settings};
 
 const LABEL: &str = "popup";
 /// Janela (lógica) = card 520×120 + margem de 30px para a sombra.
-const WIN_W: f64 = 580.0;
+const WIN_W: f64 = 676.0;
 const WIN_H: f64 = 180.0;
 const INSET: f64 = 30.0;
 /// Distância do card até a borda da área de trabalho.

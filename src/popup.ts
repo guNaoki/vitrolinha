@@ -1,7 +1,7 @@
 import { applyAccent } from "./lib/accent";
 import { armAngle, POPUP_ARM, setArm } from "./lib/arm";
 import { setCover } from "./lib/disc";
-import { getState, onNowPlaying, onPopupLeave, onPopupVisible, togglePlayPause } from "./lib/ipc";
+import { getState, next, onNowPlaying, onPopupLeave, onPopupVisible, previous, togglePlayPause } from "./lib/ipc";
 import { formatTime, livePositionMs, type NowPlaying } from "./lib/state";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -98,4 +98,7 @@ void getState().then((s) => {
   if (s && !current) render(s);
 });
 
-el.play.addEventListener("click", () => void togglePlayPause().catch((e) => console.warn(e)));
+const run = (fn: () => Promise<void>) => () => void fn().catch((e) => console.warn(e));
+el.play.addEventListener("click", run(togglePlayPause));
+$("btn-prev").addEventListener("click", run(previous));
+$("btn-next").addEventListener("click", run(next));

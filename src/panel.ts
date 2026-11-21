@@ -95,11 +95,29 @@ function renderArm(sweep: boolean) {
   setArm(el.arm, armAngle(p, PANEL_ARM), false, sweep);
 }
 
+/** Letra oculta pelo botão (só visual; lembrado entre execuções). */
+const LYRICS_KEY = "flyout.lyricsHidden";
+let lyricsHidden = false;
+try {
+  lyricsHidden = localStorage.getItem(LYRICS_KEY) === "1";
+} catch {
+  /* sem armazenamento: começa visível */
+}
+
+function applyLyricsHidden() {
+  document.body.dataset.lyrics = lyricsHidden ? "off" : "on";
+  const btn = document.getElementById("btn-lyrics")!;
+  const label = lyricsHidden ? "Mostrar letra" : "Ocultar letra";
+  btn.setAttribute("aria-label", label);
+  btn.setAttribute("aria-pressed", String(lyricsHidden));
+  btn.title = label;
+}
+
 /** Letra acompanhando a posição: só agenda troca de linha tocando e com a janela visível. */
 function syncLyrics() {
   const s = current;
   if (!s) return;
-  if (!isActive()) {
+  if (!isActive() || lyricsHidden) {
     lyricsView.stop();
     return;
   }
@@ -192,6 +210,17 @@ el.play.addEventListener("click", run(togglePlayPause));
 el.next.addEventListener("click", run(next));
 $("btn-min").addEventListener("click", run(minimizePanel));
 $("btn-size").addEventListener("click", run(togglePanelSize));
+$("btn-lyrics").addEventListener("click", () => {
+  lyricsHidden = !lyricsHidden;
+  try {
+    localStorage.setItem(LYRICS_KEY, lyricsHidden ? "1" : "0");
+  } catch {
+    /* tudo bem: vale só nesta execução */
+  }
+  applyLyricsHidden();
+  syncLyrics(); // oculta: para o timer; mostra: volta a acompanhar a posição
+});
+applyLyricsHidden();
 
 /**
  * Modo de janela livre: a barra de cima arrasta a janela e as bordas redimensionam
