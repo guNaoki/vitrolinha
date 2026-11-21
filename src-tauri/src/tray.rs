@@ -19,6 +19,8 @@ const ID_FILL: &str = "fill";
 const ID_DYNAMIC_COLOR: &str = "dynamic-color";
 const ID_LYRICS: &str = "lyrics";
 const ID_HD_COVER: &str = "hd-cover";
+const ID_HISTORY: &str = "history";
+const ID_CLEAR_HISTORY: &str = "clear-history";
 const ID_SHORTCUTS: &str = "shortcuts";
 const ID_AUTOSTART: &str = "autostart";
 const ID_QUIT: &str = "quit";
@@ -148,6 +150,14 @@ fn source_menu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
     Ok(menu)
 }
 
+/// "Estante": guardar o que você ouve (só neste computador) e apagar o histórico.
+fn shelf_menu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
+    let menu = Submenu::with_id(app, "shelf", "Estante", true)?;
+    menu.append(&check(app, ID_HISTORY, "Guardar o que eu ouço (só neste computador)", settings::history_enabled(app))?)?;
+    menu.append(&MenuItem::with_id(app, ID_CLEAR_HISTORY, "Limpar a estante (apaga o histórico)", true, None::<&str>)?)?;
+    Ok(menu)
+}
+
 /// "Efeitos do disco": intensidade do brilho que gira, dos riscos e do tremor do braço.
 fn fx_menu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
     let current = settings::disk_fx(app);
@@ -177,6 +187,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &popup_menu(app)?,
             &panel_menu(app)?,
             &fx_menu(app)?,
+            &shelf_menu(app)?,
             &dynamic,
             &lyrics,
             &hd_cover,
@@ -202,6 +213,8 @@ fn on_menu(app: &AppHandle, id: &str) {
             settings::set_lyrics_enabled(app, !settings::lyrics_enabled(app));
             lyrics::reload(app); // limpa ou busca a letra da faixa atual na hora
         }
+        ID_HISTORY => settings::set_history_enabled(app, !settings::history_enabled(app)),
+        ID_CLEAR_HISTORY => crate::history::clear(app),
         ID_HD_COVER => {
             settings::set_hd_cover(app, !settings::hd_cover(app));
             hdcover::reload(app); // busca (ou deixa de usar) a capa grande da faixa atual

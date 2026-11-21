@@ -14,7 +14,7 @@ use windows::Graphics::Imaging::{
     BitmapTransform, ColorManagementMode, ExifOrientationMode,
 };
 use windows::Media::Control::GlobalSystemMediaTransportControlsSessionMediaProperties as Props;
-use windows::Storage::Streams::{DataReader, InMemoryRandomAccessStream};
+use windows::Storage::Streams::{DataReader, DataWriter, InMemoryRandomAccessStream};
 
 const TARGET: u32 = 1024;
 
@@ -75,6 +75,63 @@ fn remove(path: Option<&Path>) {
     if let Some(p) = path {
         let _ = fs::remove_file(p);
     }
+}
+
+/// Reduz uma imagem (JPEG/PNG em memória) para `target` px no lado menor, sem ampliar,
+/// e devolve JPEG. Usado pela estante (miniaturas leves). Precisa de WinRT (MTA) na thread.
+pub fn shrink_jpeg(bytes: &[u8], target: u32) -> Option<Vec<u8>> {
+    match shrink(bytes, target) {
+        Ok(v) => Some(v),
+        Err(e) => {
+            eprintln!("[art] falha ao reduzir a miniatura: {e}");
+            None
+        }
+    }
+}
+
+fn shrink(bytes: &[u8], target: u32) -> Result<Vec<u8>> {
+    let stream = InMemoryRandomAccessStream::new()?;
+    let writer = DataWriter::CreateDataWriter(&stream.GetOutputStreamAt(0)?)?;
+    writer.WriteBytes(bytes)?;
+    writer.StoreAsync()?.join()?;
+    writer.FlushAsync()?.join()?;
+    writer.DetachStream()?;
+    stream.Seek(0)?;
+
+    let decoder = BitmapDecoder::CreateAsync(&stream)?.join()?;
+    let (w, h) = (decoder.PixelWidth()?, decoder.PixelHeight()?);
+    if w == 0 || h == 0 {
+        return Err(windows::core::Error::from_hresult(windows::core::HRESULT(0x8000_4005u32 as i32)));
+    }
+    let short = w.min(h);
+    let k = if short > target { target as f64 / short as f64 } else { 1.0 };
+    let (nw, nh) = (((w as f64 * k).round() as u32).max(1), ((h as f64 * k).round() as u32).max(1));
+
+    let transform = BitmapTransform::new()?;
+    transform.SetScaledWidth(nw)?;
+    transform.SetScaledHeight(nh)?;
+    transform.SetInterpolationMode(BitmapInterpolationMode::Fant)?;
+    let pixels = decoder
+        .GetPixelDataTransformedAsync(
+            BitmapPixelFormat::Bgra8,
+            BitmapAlphaMode::Ignore,
+            &transform,
+            ExifOrientationMode::IgnoreExifOrientation,
+            ColorManagementMode::DoNotColorManage,
+        )?
+        .join()?
+        .DetachPixelData()?;
+
+    let mem = InMemoryRandomAccessStream::new()?;
+    let encoder = BitmapEncoder::CreateAsync(BitmapEncoder::JpegEncoderId()?, &mem)?.join()?;
+    encoder.SetPixelData(BitmapPixelFormat::Bgra8, BitmapAlphaMode::Ignore, nw, nh, 96.0, 96.0, &pixels)?;
+    encoder.FlushAsync()?.join()?;
+    let size = mem.Size()? as u32;
+    let reader = DataReader::CreateDataReader(&mem.GetInputStreamAt(0)?)?;
+    reader.LoadAsync(size)?.join()?;
+    let mut out = vec![0u8; size as usize];
+    reader.ReadBytes(&mut out)?;
+    Ok(out)
 }
 
 /// JPEG reduzido + cor de destaque, calculada nos mesmos pixels (sem decodificar de novo).

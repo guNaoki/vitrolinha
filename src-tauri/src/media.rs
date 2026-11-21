@@ -333,6 +333,7 @@ fn publish(app: &AppHandle, np: NowPlaying) {
         np.status, np.title, np.artist, np.album, np.position_ms, np.duration_ms, np.source_app
     );
     *app.state::<SharedState>().now.lock().unwrap() = Some(np.clone());
+    crate::history::observe(app, &np); // estante: conta a faixa e guarda a capa
     emit(app, &np);
 }
 

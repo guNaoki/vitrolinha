@@ -412,6 +412,126 @@ body[data-mode="free"] .chrome button {
   cursor: pointer;
 }
 
+/* ---------- Estante (histórico dos discos ouvidos) ---------- */
+/* Cobre a janela (em px reais, qualquer tamanho), abaixo da barra de cima. */
+.shelf {
+  position: fixed;
+  inset: var(--bezel, 0px);
+  z-index: 8;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 88px 32px 32px;
+  background: rgba(13, 10, 7, 0.99);
+  user-select: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(239, 226, 195, 0.25) transparent;
+}
+.shelf[hidden] {
+  display: none;
+}
+.shelf-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.shelf-head h2 {
+  margin: 0;
+  font: 13px/1 var(--font-caps);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.shelf-head span {
+  font: 11px/1 var(--font-caps);
+  letter-spacing: 0.12em;
+  color: var(--cream-dim);
+}
+.shelf-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(140px, 15vw, 210px), 1fr));
+  gap: 34px 30px;
+}
+.shelf-empty {
+  grid-column: 1 / -1;
+  font-size: 18px;
+  font-style: italic;
+  color: var(--cream-dim);
+}
+.rec {
+  position: relative;
+  outline: none;
+}
+/* O disco "saindo" da capa; desliza mais um pouco ao passar o mouse. */
+.rec .vinyl {
+  position: absolute;
+  top: 5%;
+  left: 24%;
+  width: 90%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--bg) 0 3%, #2a251e 3.4% 12%, transparent 12.4%),
+    repeating-radial-gradient(circle, #0d0b08 0 1px, #1c1711 1px 2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.rec:hover .vinyl,
+.rec:focus-visible .vinyl {
+  transform: translateX(7%);
+}
+.rec .sleeve {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 3px;
+  background: #2a251e center / cover no-repeat;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.65);
+  font-size: 36px;
+  color: var(--cream-dim);
+}
+.rec:focus-visible .sleeve {
+  outline: 2px solid var(--cream);
+  outline-offset: 3px;
+}
+.rec .meta {
+  margin-top: 10px;
+}
+.rec .meta p {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rec-title {
+  font-size: 17px;
+  line-height: 1.2;
+  color: var(--cream);
+}
+.rec-artist {
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.25;
+  color: var(--cream-artist);
+}
+.rec-info {
+  margin-top: 3px;
+  font: 9px/1.2 var(--font-caps);
+  letter-spacing: 0.1em;
+  color: var(--cream-dim);
+}
+html[data-frame="deck"] .shelf {
+  border-radius: 14px;
+  padding-top: 84px;
+}
+body[data-hidden] .shelf {
+  display: none;
+}
+
 /* ---------- Moldura de toca-discos (janela livre) ----------
    html[data-frame="deck"]: a janela (transparente) vira um mini toca-discos: caixa de
    madeira com parafusos e a placa do painel embutida. O disco encolhe e aparece

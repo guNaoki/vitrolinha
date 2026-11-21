@@ -71,6 +71,14 @@ pub fn set_lyrics_enabled(app: &AppHandle, on: bool) {
     set(app, "lyricsEnabled", json!(on));
 }
 
+/// Guarda no computador o que você ouve, para a estante (padrão: sim). Nada sai da máquina.
+pub fn history_enabled(app: &AppHandle) -> bool {
+    get(app, "historyEnabled").unwrap_or(true)
+}
+pub fn set_history_enabled(app: &AppHandle, on: bool) {
+    set(app, "historyEnabled", json!(on));
+}
+
 /// Efeitos do disco (brilho que gira, riscos, tremor do braço): "off" | "soft" | "strong".
 /// (padrão: soft)
 pub const DISK_FX_LEVELS: [&str; 3] = ["off", "soft", "strong"];

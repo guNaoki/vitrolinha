@@ -98,6 +98,7 @@ pub fn request(app: &AppHandle, np: &NowPlaying, short_side: u32) {
             return;
         }
         let Some(path) = save(&bytes) else { return };
+        crate::history::offer_cover(&app, &np, &path.to_string_lossy()); // a estante também ganha a capa grande
         println!("[capa-hd] {} — {} ({} KB)", np.title, np.artist, bytes.len() / 1024);
         let old = app
             .state::<HdState>()

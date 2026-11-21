@@ -33,6 +33,17 @@ export const onPopupVisible = (cb: (visible: boolean) => void): Promise<Unlisten
 export const onPopupLeave = (cb: () => void): Promise<UnlistenFn> =>
   listen("popup-leave", () => cb());
 
+/** Estante: um disco ouvido (espelha `Record` em history.rs). */
+export type ShelfRecord = {
+  title: string;
+  artist: string;
+  album: string;
+  coverPath: string | null;
+  plays: number;
+  lastMs: number;
+};
+export const getHistory = () => invoke<ShelfRecord[]>("get_history");
+
 /** Volume do sistema (0–1). `null` se não há dispositivo de saída. */
 export type Volume = { level: number; muted: boolean };
 export const getVolume = () => invoke<Volume | null>("get_volume");

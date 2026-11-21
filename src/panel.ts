@@ -17,6 +17,7 @@ import {
   togglePlayPause,
 } from "./lib/ipc";
 import { LyricsView, type Lyrics } from "./lib/lyrics";
+import { Shelf } from "./lib/shelf";
 import { VolumeControl } from "./lib/volume";
 import { formatTime, livePositionMs, type NowPlaying } from "./lib/state";
 
@@ -235,6 +236,8 @@ el.play.addEventListener("click", run(togglePlayPause));
 el.next.addEventListener("click", run(next));
 $("btn-min").addEventListener("click", run(minimizePanel));
 $("btn-size").addEventListener("click", run(togglePanelSize));
+const shelf = new Shelf($("shelf"), $("shelf-grid"), $("shelf-count"), $("btn-shelf"));
+$("btn-shelf").addEventListener("click", () => shelf.toggle());
 $("btn-lyrics").addEventListener("click", () => {
   lyricsHidden = !lyricsHidden;
   try {

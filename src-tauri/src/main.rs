@@ -5,6 +5,7 @@ mod accent;
 mod artwork;
 mod fullscreen;
 mod hdcover;
+mod history;
 mod lyrics;
 mod media;
 mod popup;
@@ -59,6 +60,12 @@ fn minimize_panel(app: tauri::AppHandle) {
     }
 }
 
+/// Estante: os últimos discos ouvidos (mais recente primeiro).
+#[tauri::command]
+fn get_history(app: tauri::AppHandle) -> Vec<history::Record> {
+    history::list(&app)
+}
+
 /// Volume do sistema (controle de volume do painel). `None` se não há dispositivo de saída.
 #[tauri::command]
 fn get_volume() -> Option<volume::Volume> {
@@ -106,6 +113,7 @@ fn main() {
         .manage(SharedState::default())
         .manage(lyrics::LyricsState::default())
         .manage(hdcover::HdState::default())
+        .manage(history::HistoryState::default())
         .invoke_handler(tauri::generate_handler![
             get_state,
             get_lyrics,
@@ -115,6 +123,7 @@ fn main() {
             minimize_panel,
             toggle_panel_size,
             get_disk_fx,
+            get_history,
             get_volume,
             set_volume,
             toggle_mute,

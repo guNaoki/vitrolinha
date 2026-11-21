@@ -129,12 +129,20 @@
     <div class="vignette" aria-hidden="true"></div>
     <!-- Grão de filme (PNG tileável) sobre a janela inteira -->
     <div class="grain" aria-hidden="true"></div>
+    <!-- Estante: os últimos discos ouvidos (aberta pelo botão da barra de cima) -->
+    <section class="shelf" id="shelf" hidden aria-label="Estante de discos">
+      <header class="shelf-head"><h2>Estante</h2><span id="shelf-count"></span></header>
+      <ul class="shelf-grid" id="shelf-grid"></ul>
+    </section>
     <!-- Barra de cima (fora do palco: fica no topo da janela, em qualquer escala) -->
     <div class="chrome" id="chrome">
       <button type="button" id="btn-min" aria-label="Minimizar painel" title="Minimizar painel">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" /></svg>
       </button>
-      <button type="button" id="btn-lyrics" aria-label="Ocultar letra" title="Ocultar letra" aria-pressed="false">
+      <button type="button" id="btn-shelf" aria-label="Estante de discos" title="Estante de discos" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5v14M10 5v14M15.5 6.5l3.6 12.3" /></svg>
+      </button>
+      <button type="button" id="btn-lyrics"aria-label="Ocultar letra" title="Ocultar letra" aria-pressed="false">
         <!-- linhas de texto; riscadas quando a letra está oculta -->
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M5 8h14M5 12h14M5 16h9" />
