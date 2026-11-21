@@ -33,6 +33,12 @@ export const onPopupVisible = (cb: (visible: boolean) => void): Promise<Unlisten
 export const onPopupLeave = (cb: () => void): Promise<UnlistenFn> =>
   listen("popup-leave", () => cb());
 
+/** Volume do sistema (0–1). `null` se não há dispositivo de saída. */
+export type Volume = { level: number; muted: boolean };
+export const getVolume = () => invoke<Volume | null>("get_volume");
+export const setVolume = (level: number) => invoke<Volume | null>("set_volume", { level });
+export const toggleMute = () => invoke<Volume | null>("toggle_mute");
+
 /** Efeitos do disco: "off" | "soft" | "strong" (menu da bandeja). */
 export type DiskFx = "off" | "soft" | "strong";
 export const getDiskFx = () => invoke<DiskFx>("get_disk_fx");

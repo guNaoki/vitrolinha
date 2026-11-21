@@ -172,6 +172,88 @@ body:not([data-status="playing"]) .controls .i-play {
   display: block;
 }
 
+/* ---------- Volume (do sistema) ---------- */
+/* À esquerda dos controles, na mesma linha (centro dos botões a 68px da base). */
+.volume {
+  position: absolute;
+  right: 240px;
+  bottom: 52px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.volume[hidden] {
+  display: none;
+}
+.volume button {
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(239, 226, 195, 0.25);
+  border-radius: 50%;
+  background: rgba(13, 10, 7, 0.55);
+  color: var(--cream);
+  cursor: pointer;
+}
+.volume button:hover {
+  border-color: var(--amber);
+}
+.volume button:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 3px;
+}
+.volume svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.volume .i-off,
+body[data-muted] .volume .i-on {
+  display: none;
+}
+body[data-muted] .volume .i-off {
+  display: block;
+}
+.volume input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 90px;
+  height: 22px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  --v: 50%;
+}
+.volume input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--amber) var(--v), rgba(239, 226, 195, 0.22) var(--v));
+}
+.volume input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: 0 0 0 2px rgba(13, 10, 7, 0.6);
+}
+.volume input[type="range"]:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 3px;
+}
+body[data-hidden] .volume {
+  display: none;
+}
+
 /* ---------- Letra sincronizada ---------- */
 /* Layout largo: duas linhas (atual + próxima) no canto inferior esquerdo, abaixo do
    selo (que termina em y≈610) e à esquerda do braço (em y≥620 ele está em x≤900). */
@@ -462,6 +544,11 @@ html[data-frame="deck"] .controls {
   right: 44px;
   bottom: 36px;
 }
+html[data-frame="deck"] .volume {
+  right: 236px;
+  bottom: 48px;
+  pointer-events: auto;
+}
 
 /* ---------- Layout alto (janela vertical) ---------- */
 /* Tudo em unidades do palco (1280 de largura), com tipografia maior porque o
@@ -470,7 +557,7 @@ body[data-layout="tall"] .info {
   left: 96px;
   right: 96px;
   top: auto;
-  bottom: 300px;
+  bottom: 324px;
   width: auto;
   height: auto;
   display: block;
@@ -531,6 +618,35 @@ body[data-layout="tall"] .lyrics .s2 {
   font-size: 34px;
   color: var(--cream-dim);
   opacity: 0.55;
+}
+/* Layout alto: o volume sobe para a linha acima dos botões grandes. */
+body[data-layout="tall"] .volume {
+  left: 96px;
+  right: auto;
+  bottom: 240px;
+  height: 56px;
+  gap: 16px;
+}
+body[data-layout="tall"] .volume button {
+  width: 56px;
+  height: 56px;
+}
+body[data-layout="tall"] .volume svg {
+  width: 28px;
+  height: 28px;
+}
+body[data-layout="tall"] .volume input[type="range"] {
+  width: 360px;
+  height: 40px;
+}
+body[data-layout="tall"] .volume input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+}
+body[data-layout="tall"] .volume input[type="range"]::-webkit-slider-thumb {
+  width: 24px;
+  height: 24px;
+  margin-top: -9px;
 }
 body[data-layout="tall"] .controls {
   left: 96px;

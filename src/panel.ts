@@ -17,6 +17,7 @@ import {
   togglePlayPause,
 } from "./lib/ipc";
 import { LyricsView, type Lyrics } from "./lib/lyrics";
+import { VolumeControl } from "./lib/volume";
 import { formatTime, livePositionMs, type NowPlaying } from "./lib/state";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -149,6 +150,21 @@ function titleClass(title: string): string {
   return "";
 }
 
+const volume = new VolumeControl(
+  $("volume"),
+  $("vol") as HTMLInputElement,
+  $("btn-mute") as HTMLButtonElement,
+);
+/** Volume pode mudar fora daqui (teclas de mídia): relê a cada 2 s, só com a janela visível. */
+let volumeTimer: number | undefined;
+function syncVolume() {
+  window.clearInterval(volumeTimer);
+  volumeTimer = undefined;
+  if (!isActive()) return;
+  volume.refresh();
+  volumeTimer = window.setInterval(() => volume.refresh(), 2000);
+}
+
 function stopTimer() {
   window.clearInterval(timer);
   timer = undefined;
@@ -194,6 +210,7 @@ function render(s: NowPlaying) {
 /** Janela escondida: sem timer e sem animação (CSS via body[data-hidden]). */
 function syncActive() {
   document.body.toggleAttribute("data-hidden", !isActive());
+  syncVolume();
   if (!isActive()) {
     stopTimer();
     lyricsView.stop();
@@ -253,6 +270,7 @@ void isPanelFree().then(applyFree);
 addEventListener("resize", fit);
 initDiskFx();
 fit();
+syncVolume();
 
 void onNowPlaying(render);
 void onLyrics(applyLyrics);

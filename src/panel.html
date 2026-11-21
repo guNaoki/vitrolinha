@@ -98,6 +98,19 @@
         <p class="time" id="time"></p>
       </section>
 
+      <!-- Volume do sistema: botão de mudo + controle deslizante (roda do mouse também) -->
+      <div class="volume" id="volume" hidden>
+        <button type="button" id="btn-mute" aria-label="Silenciar" title="Silenciar">
+          <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9zM16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" />
+          </svg>
+          <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9zM16.5 9.5l5 5M21.5 9.5l-5 5" />
+          </svg>
+        </button>
+        <input type="range" id="vol" min="0" max="100" step="1" value="50" aria-label="Volume" />
+      </div>
+
       <!-- Controles: habilitados quando há uma sessão de mídia -->
       <div class="controls">
         <button type="button" id="btn-prev" aria-label="Faixa anterior" disabled>

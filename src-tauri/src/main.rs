@@ -11,6 +11,7 @@ mod popup;
 mod settings;
 mod shortcuts;
 mod tray;
+mod volume;
 mod windows;
 
 use media::{Control, NowPlaying, SharedState};
@@ -58,6 +59,22 @@ fn minimize_panel(app: tauri::AppHandle) {
     }
 }
 
+/// Volume do sistema (controle de volume do painel). `None` se não há dispositivo de saída.
+#[tauri::command]
+fn get_volume() -> Option<volume::Volume> {
+    volume::get()
+}
+
+#[tauri::command]
+fn set_volume(level: f32) -> Option<volume::Volume> {
+    volume::set(level)
+}
+
+#[tauri::command]
+fn toggle_mute() -> Option<volume::Volume> {
+    volume::toggle_mute()
+}
+
 /// Nível dos efeitos do disco ("off" | "soft" | "strong"); mudanças chegam pelo evento `disk-fx`.
 #[tauri::command]
 fn get_disk_fx(app: tauri::AppHandle) -> String {
@@ -98,6 +115,9 @@ fn main() {
             minimize_panel,
             toggle_panel_size,
             get_disk_fx,
+            get_volume,
+            set_volume,
+            toggle_mute,
             panel_is_free
         ])
         .on_window_event(|window, event| {
