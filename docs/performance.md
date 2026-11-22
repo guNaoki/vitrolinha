@@ -4,7 +4,7 @@ Máquina: Windows 11, 12 núcleos lógicos. Build de **release** gerado com `npx
 
 > **Atenção ao compilar:** use sempre `npx tauri build --no-bundle`. Um `cargo build --release` direto não embute a interface e o exe abre uma página de erro apontando para `localhost:1420`.
 
-CPU em "% de um núcleo" (100% = um núcleo inteiro): soma do `flyout.exe` + todos os processos do WebView2 (browser, GPU, renderers, utilities). RAM = working set somado.
+CPU em "% de um núcleo" (100% = um núcleo inteiro): soma do `vitrolinha.exe` + todos os processos do WebView2 (browser, GPU, renderers, utilities). RAM = working set somado.
 
 ## Baseline: Tauri "hello world" (mesma máquina, release, renderizando)
 
@@ -15,9 +15,9 @@ CPU em "% de um núcleo" (100% = um núcleo inteiro): soma do `flyout.exe` + tod
 | RAM privada | 152 MB |
 | CPU parado (30 s) | 0,10% de um núcleo |
 
-É o piso do WebView2: a RAM do Flyout deve ser lida como "piso + extras".
+É o piso do WebView2: a RAM da Vitrolinha deve ser lida como "piso + extras".
 
-## Flyout (marco 5)
+## Vitrolinha (marco 5)
 
 | Cenário | Processos | RAM (WS / privada) | CPU |
 |---|---|---|---|
@@ -30,7 +30,7 @@ CPU em "% de um núcleo" (100% = um núcleo inteiro): soma do `flyout.exe` + tod
 Leitura:
 
 - **Meta "~0% de CPU oculto": praticamente atendida** (0,68% de um núcleo; o hello world parado dá 0,10%).
-- **RAM oculta**: +122 MB sobre o hello world. O Flyout mantém dois WebViews (painel e popup) carregados e cada um tem seu renderer; é o preço de o popup aparecer sem atraso.
+- **RAM oculta**: +122 MB sobre o hello world. A Vitrolinha mantém dois WebViews (painel e popup) carregados e cada um tem seu renderer; é o preço de o popup aparecer sem atraso.
 - **Disco girando em release: não medido.** A música estava pausada durante esta rodada e não retomei a reprodução do usuário. Estimativa do teste A/B em build de debug com o servidor de desenvolvimento (mesmos processos do WebView2): 21% a 32% de um núcleo, quase tudo no processo da GPU. Falta repetir em release com a música tocando.
 
 ## Método
@@ -38,7 +38,7 @@ Leitura:
 - App iniciado com um `settings.json` de teste (o do usuário é salvo e restaurado), esperando 12 s para o WebView2 assentar.
 - CPU = variação de `TotalProcessorTime` de toda a árvore de processos dividida pelo tempo de relógio.
 - Painel: colocado acima das outras janelas sem tirar o foco. Coberto por outra janela o WebView2 para de renderizar (oclusão) e a CPU cai para ≈0,3%, o que não representa o uso real.
-- Popup: disparado por uma 2ª execução (`flyout.exe --popup`, tratada pela instância única), amostras a cada ~100 ms.
+- Popup: disparado por uma 2ª execução (`vitrolinha.exe --popup`, tratada pela instância única), amostras a cada ~100 ms.
 
 ## Observações
 

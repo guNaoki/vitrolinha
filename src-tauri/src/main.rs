@@ -105,7 +105,7 @@ fn toggle_panel_size(app: tauri::AppHandle) {
 fn main() {
     tauri::Builder::default()
         // Instância única: precisa ser o primeiro plugin. Abrir o app de novo
-        // mostra o painel; `flyout.exe --popup` dispara o popup (útil para testar
+        // mostra o painel; `vitrolinha.exe --popup` dispara o popup (útil para testar
         // posição/duração e para atalhos do sistema).
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
             if argv.iter().any(|a| a == "--popup") {
@@ -166,5 +166,5 @@ fn main() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("erro ao iniciar o Flyout");
+        .expect("erro ao iniciar a Vitrolinha");
 }

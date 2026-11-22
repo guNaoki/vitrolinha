@@ -7,7 +7,7 @@ const MAX_SHOWN = 8;
 
 const HINTS: Partial<Record<Voice["status"], string>> = {
   setup: "Discord: falta o client id no discord.json (veja o README)",
-  authorizing: "Discord: autorize o Flyout na janela do Discord",
+  authorizing: "Discord: autorize a Vitrolinha na janela do Discord",
   refused: "Discord: não autorizado. Desligue e ligue a opção no menu da bandeja para tentar de novo",
 };
 

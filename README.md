@@ -1,6 +1,6 @@
-# vinil-flyout
+# Vitrolinha
 
-Flyout de música para Windows com cara de toca-discos vintage. Mostra o que está
+A vitrola da sua tela: flyout de música para Windows com cara de toca-discos vintage. Mostra o que está
 tocando (qualquer app que apareça nos controles de mídia do Windows) num **popup** ao
 trocar de faixa e num **painel** para o segundo monitor.
 
@@ -25,8 +25,8 @@ npx tauri build --no-bundle          # compila (sempre com --no-bundle)
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 ```
 
-O script copia o executável para `%LOCALAPPDATA%\Programs\Flyout` e cria atalhos no
-menu Iniciar e na Área de Trabalho. Depois é só abrir "Flyout" pelo menu Iniciar. Para
+O script copia o executável para `%LOCALAPPDATA%\Programs\Vitrolinha` e cria atalhos no
+menu Iniciar e na Área de Trabalho. Depois é só abrir "Vitrolinha" pelo menu Iniciar. Para
 abrir junto com o Windows, use "Iniciar com o Windows" no menu da bandeja.
 
 ## Call do Discord na tela cheia
@@ -42,16 +42,16 @@ uma vez):
 2. **OAuth2** → em **Redirects**, adicione `http://localhost` e salve. Copie o **Client ID** e,
    em **Reset Secret**, o **Client Secret**.
 3. Rode `powershell -ExecutionPolicy Bypass -File scripts\discord-setup.ps1`: ele pede o Client ID
-   e o Secret, grava em `%APPDATA%\app.flyout.music\discord.json` (arquivo só do Discord, que o
+   e o Secret, grava em `%APPDATA%\app.vitrolinha\discord.json` (arquivo só do Discord, que o
    app não regrava) e liga a opção. Se preferir editar à mão, o arquivo tem as chaves `enabled`,
    `clientId`, `clientSecret` e, se precisar de outro redirect, `redirectUri`.
 4. O script já liga **Call do Discord na tela cheia** (dá para desligar no menu da bandeja) e abre
-   o Flyout. Com o Discord aberto, ele pede uma autorização: aceite. Vale uma vez; o token é renovado
+   a Vitrolinha. Com o Discord aberto, ele pede uma autorização: aceite. Vale uma vez; o token é renovado
    sozinho.
 
 **Sem secret (cliente público, PKCE).** Se no app do Discord você ligar **OAuth2 → Public Client**,
 o Client Secret não é necessário: deixe-o vazio no script (ou sem a chave `clientSecret` no
-`discord.json`) e o Flyout autoriza com PKCE. Como o Client ID não é segredo, isso também permite
+`discord.json`) e a Vitrolinha autoriza com PKCE. Como o Client ID não é segredo, isso também permite
 embutir um app único no programa (constante `BUILT_IN_DISCORD_CLIENT_ID` em `settings.rs`).
 
 O escopo `rpc` do Discord é restrito, e não está confirmado se um app não aprovado serve contas
@@ -70,7 +70,7 @@ cd src-tauri; cargo test
 
 Nada sai do computador por padrão, exceto, se ligados no menu da bandeja: busca de letras
 (artista, título, álbum e duração → lrclib.net) e de capa grande (artista e título →
-itunes.apple.com). A estante fica em `%APPDATA%\app.flyout.music\shelf` e pode ser
+itunes.apple.com). A estante fica em `%APPDATA%\app.vitrolinha\shelf` e pode ser
 desligada e apagada pelo menu.
 
 A call do Discord (desligada por padrão) conversa só com o app do Discord no próprio

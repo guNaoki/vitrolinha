@@ -44,7 +44,7 @@ const DURATIONS_MS: [u64; 4] = [2_000, 4_000, 6_000, 10_000];
 pub fn init(app: &AppHandle) -> tauri::Result<()> {
     let menu = build_menu(app)?;
     let mut builder = TrayIconBuilder::with_id(TRAY_ID)
-        .tooltip("Flyout")
+        .tooltip("Vitrolinha")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| on_menu(app, event.id().as_ref()))

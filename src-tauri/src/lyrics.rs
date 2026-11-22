@@ -1,7 +1,7 @@
 //! Letras sincronizadas (LRC) do lrclib.net.
 //!
 //! Privacidade: a busca envia ao lrclib.net só título, artista, álbum e duração
-//! da faixa que está tocando (e um User-Agent genérico "Flyout"). Pode ser
+//! da faixa que está tocando (e um User-Agent "Vitrolinha" com o endereço do projeto). Pode ser
 //! desligada no menu da bandeja. HTTP pelo HttpClient do sistema (sem crate extra).
 //!
 //! Fluxo: faixa nova → thread busca (exato → busca por campos → busca por título
@@ -24,7 +24,7 @@ use crate::media::{NowPlaying, SharedState};
 use crate::settings;
 
 const API: &str = "https://lrclib.net";
-const USER_AGENT: &str = "Flyout/0.1 (desktop music flyout)";
+const USER_AGENT: &str = "Vitrolinha/0.1 (+https://github.com/guNaoki/vitrolinha)";
 /// Com duração conhecida, só aceita letra de uma faixa com duração parecida
 /// (evita casar com outra versão da música).
 const MAX_DURATION_DIFF_S: f64 = 15.0;

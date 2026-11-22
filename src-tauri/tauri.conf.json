@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Flyout",
+  "productName": "Vitrolinha",
   "version": "0.1.0",
-  "identifier": "app.flyout.music",
+  "identifier": "app.vitrolinha",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "panel",
-        "title": "Flyout",
+        "title": "Vitrolinha",
         "url": "panel.html",
         "width": 1280,
         "height": 720,
@@ -26,7 +26,7 @@
       },
       {
         "label": "popup",
-        "title": "Flyout — popup",
+        "title": "Vitrolinha — popup",
         "url": "popup.html",
         "width": 676,
         "height": 180,
@@ -43,7 +43,7 @@
     ],
     "security": {
       "csp": null,
-      "assetProtocol": { "enable": true, "scope": ["$TEMP/flyout-art/**", "$APPDATA/shelf/**"] }
+      "assetProtocol": { "enable": true, "scope": ["$TEMP/vitrolinha-art/**", "$APPDATA/shelf/**"] }
     }
   },
   "bundle": {

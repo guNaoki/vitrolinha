@@ -5,7 +5,7 @@
 //! busca a capa grande no iTunes Search API.
 //!
 //! Privacidade: a busca envia ao itunes.apple.com só artista e título da faixa que está
-//! tocando (e um User-Agent genérico "Flyout"). Pode ser desligada no menu da bandeja.
+//! tocando (e um User-Agent "Vitrolinha" com o endereço do projeto). Pode ser desligada no menu da bandeja.
 //! Sem resultado confiável (nome e duração parecidos), mantém a capa do player.
 
 use std::fs;
@@ -26,7 +26,7 @@ use crate::lyrics::clean_title;
 use crate::media::{self, NowPlaying};
 use crate::settings;
 
-const USER_AGENT: &str = "Flyout/0.1 (desktop music flyout)";
+const USER_AGENT: &str = "Vitrolinha/0.1 (+https://github.com/guNaoki/vitrolinha)";
 /// Lado (px) da capa pedida. O iTunes entrega até ~3000; 1000 sobra para o selo.
 const SIZE: &str = "1000x1000bb";
 /// Capas do player com lado menor a partir disso já estão boas: não busca.
@@ -131,7 +131,7 @@ pub fn reload(app: &AppHandle) {
 static COUNTER: AtomicU32 = AtomicU32::new(0);
 
 fn save(bytes: &[u8]) -> Option<PathBuf> {
-    let dir = std::env::temp_dir().join("flyout-art");
+    let dir = std::env::temp_dir().join("vitrolinha-art");
     let _ = fs::create_dir_all(&dir);
     let path = dir.join(format!("hd-{}.jpg", COUNTER.fetch_add(1, Ordering::SeqCst) + 1));
     fs::write(&path, bytes).ok()?;

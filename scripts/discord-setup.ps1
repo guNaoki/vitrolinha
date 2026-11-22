@@ -1,14 +1,14 @@
 # Grava o Client ID e o Client Secret do seu app do Discord em
-# %APPDATA%\app.flyout.music\discord.json e liga a opção "Call do Discord na tela cheia".
-# Fecha o Flyout antes e abre de novo no fim. Não mexe no settings.json.
+# %APPDATA%\app.vitrolinha\discord.json e liga a opção "Call do Discord na tela cheia".
+# Fecha a Vitrolinha antes e abre de novo no fim. Não mexe no settings.json.
 #
 # Uso:
 #   powershell -ExecutionPolicy Bypass -File scripts\discord-setup.ps1
 $ErrorActionPreference = 'Stop'
 
-$pasta = Join-Path $env:APPDATA 'app.flyout.music'
+$pasta = Join-Path $env:APPDATA 'app.vitrolinha'
 $arquivo = Join-Path $pasta 'discord.json'
-$exe = Join-Path $env:LOCALAPPDATA 'Programs\Flyout\flyout.exe'
+$exe = Join-Path $env:LOCALAPPDATA 'Programs\Vitrolinha\vitrolinha.exe'
 
 $id = (Read-Host 'Client ID (aba OAuth2 do app no Discord)').Trim()
 $segura = Read-Host 'Client Secret (não aparece enquanto você cola; deixe vazio se o app é "Public Client")' -AsSecureString
@@ -16,7 +16,7 @@ $secret = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropSer
 if (-not $id) { throw 'O Client ID é obrigatório.' }
 if ($id -notmatch '^\d{15,25}$') { throw 'O Client ID tem só números (17 a 20 dígitos). Confira se não copiou outra coisa.' }
 
-Get-Process flyout -ErrorAction SilentlyContinue | Stop-Process -Force
+Get-Process vitrolinha -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Seconds 1
 
 New-Item -ItemType Directory -Force $pasta | Out-Null
@@ -40,4 +40,4 @@ $conferido = [IO.File]::ReadAllText($arquivo) | ConvertFrom-Json
 "  enabled      : $($conferido.enabled)"
 
 Start-Process $exe
-'Flyout aberto. Aceite o pedido de autorização que o Discord vai mostrar.'
+'Vitrolinha aberta. Aceite o pedido de autorização que o Discord vai mostrar.'

@@ -1,7 +1,7 @@
 //! Estante: os últimos discos que você ouviu, guardados SÓ neste computador.
 //!
 //! Cada faixa vira uma entrada (título, artista, álbum, quantas vezes, quando) e uma
-//! miniatura da capa de 320 px. Fica em `%APPDATA%\app.flyout.music\shelf\`
+//! miniatura da capa de 320 px. Fica em `%APPDATA%\app.vitrolinha\shelf\`
 //! (`history.json` + `covers\`). Nada é enviado para fora. Pode ser desligada e
 //! apagada pelo menu da bandeja.
 

@@ -109,7 +109,7 @@ function renderArm(sweep: boolean) {
 }
 
 /** Letra oculta pelo botão (só visual; lembrado entre execuções). */
-const LYRICS_KEY = "flyout.lyricsHidden";
+const LYRICS_KEY = "vitrolinha.lyricsHidden";
 let lyricsHidden = false;
 try {
   lyricsHidden = localStorage.getItem(LYRICS_KEY) === "1";

@@ -52,7 +52,7 @@ const CHANNEL_EVENTS: [&str; 5] = [
     "SPEAKING_STOP",
 ];
 const TOKEN_URL: &str = "https://discord.com/api/oauth2/token";
-const USER_AGENT: &str = "Flyout/0.1 (desktop music flyout)";
+const USER_AGENT: &str = "Vitrolinha/0.1 (+https://github.com/guNaoki/vitrolinha)";
 const RETRY_EVERY: Duration = Duration::from_secs(5);
 
 // ---------------------------------------------------------------- contrato com o front

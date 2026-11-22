@@ -28,7 +28,7 @@ pub struct ArtCache {
 
 impl ArtCache {
     pub fn new() -> Self {
-        let dir = std::env::temp_dir().join("flyout-art");
+        let dir = std::env::temp_dir().join("vitrolinha-art");
         let _ = fs::remove_dir_all(&dir); // lixo de execuções anteriores
         let _ = fs::create_dir_all(&dir);
         Self { dir, seq: 0, current: None, short: 0 }
