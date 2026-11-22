@@ -6,7 +6,7 @@ import type { Voice, VoiceMember } from "./ipc";
 const MAX_SHOWN = 8;
 
 const HINTS: Partial<Record<Voice["status"], string>> = {
-  setup: "Discord: faltam o client id e o secret no settings.json (veja o README)",
+  setup: "Discord: falta o client id no discord.json (veja o README)",
   authorizing: "Discord: autorize o Flyout na janela do Discord",
   refused: "Discord: não autorizado. Desligue e ligue a opção no menu da bandeja para tentar de novo",
 };

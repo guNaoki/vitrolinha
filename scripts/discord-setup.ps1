@@ -11,9 +11,9 @@ $arquivo = Join-Path $pasta 'discord.json'
 $exe = Join-Path $env:LOCALAPPDATA 'Programs\Flyout\flyout.exe'
 
 $id = (Read-Host 'Client ID (aba OAuth2 do app no Discord)').Trim()
-$segura = Read-Host 'Client Secret (não aparece enquanto você cola)' -AsSecureString
+$segura = Read-Host 'Client Secret (não aparece enquanto você cola; deixe vazio se o app é "Public Client")' -AsSecureString
 $secret = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($segura)).Trim()
-if (-not $id -or -not $secret) { throw 'Client ID e Client Secret são obrigatórios.' }
+if (-not $id) { throw 'O Client ID é obrigatório.' }
 if ($id -notmatch '^\d{15,25}$') { throw 'O Client ID tem só números (17 a 20 dígitos). Confira se não copiou outra coisa.' }
 
 Get-Process flyout -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -28,14 +28,15 @@ if (Test-Path $arquivo) {
 }
 $dados['enabled'] = $true
 $dados['clientId'] = $id
-$dados['clientSecret'] = $secret
+# Sem secret = cliente público (PKCE): tira um secret antigo do arquivo, senão o app usaria o fluxo clássico.
+if ($secret) { $dados['clientSecret'] = $secret } else { $dados.Remove('clientSecret') }
 # UTF-8 SEM BOM.
 [IO.File]::WriteAllText($arquivo, ($dados | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding $false))
 
 $conferido = [IO.File]::ReadAllText($arquivo) | ConvertFrom-Json
 "gravado em $arquivo"
 "  clientId     : $($conferido.clientId)"
-"  clientSecret : $($conferido.clientSecret.Length) caracteres"
+"  clientSecret : " + $(if ($conferido.clientSecret) { "$($conferido.clientSecret.Length) caracteres (fluxo clássico)" } else { 'nenhum (PKCE, cliente público)' })
 "  enabled      : $($conferido.enabled)"
 
 Start-Process $exe

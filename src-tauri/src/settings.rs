@@ -171,11 +171,23 @@ pub fn discord_enabled(app: &AppHandle) -> bool {
 pub fn set_discord_enabled(app: &AppHandle, on: bool) {
     discord_set(app, "enabled", json!(on));
 }
-/// (client id, client secret) do app do Discord; `None` se faltar algum.
-pub fn discord_credentials(app: &AppHandle) -> Option<(String, String)> {
-    let id = discord_get::<String>(app, "clientId", "discordClientId")?.trim().to_string();
-    let secret = discord_get::<String>(app, "clientSecret", "discordClientSecret")?.trim().to_string();
-    (!id.is_empty() && !secret.is_empty()).then_some((id, secret))
+/// Client ID do app do Discord que acompanha o programa (cliente público, sem secret: o
+/// Client ID não é segredo). Vazio até o app público ser criado no Developer Portal; enquanto
+/// isso, cada pessoa usa o `clientId` do próprio discord.json.
+const BUILT_IN_DISCORD_CLIENT_ID: &str = "";
+
+/// (client id, client secret opcional) do app do Discord. Sem secret, a autorização usa PKCE
+/// (cliente público); com secret, o fluxo clássico. `None` se não houver client id nenhum.
+pub fn discord_credentials(app: &AppHandle) -> Option<(String, Option<String>)> {
+    let own_id = discord_get::<String>(app, "clientId", "discordClientId").map(|s| s.trim().to_string());
+    let id = own_id.filter(|s| !s.is_empty()).unwrap_or_else(|| BUILT_IN_DISCORD_CLIENT_ID.to_string());
+    if id.is_empty() {
+        return None;
+    }
+    let secret = discord_get::<String>(app, "clientSecret", "discordClientSecret")
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+    Some((id, secret))
 }
 /// Redirect cadastrado no app (aba OAuth2); o padrão é o que o README manda cadastrar.
 pub fn discord_redirect_uri(app: &AppHandle) -> String {

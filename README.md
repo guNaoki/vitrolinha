@@ -49,8 +49,14 @@ uma vez):
    o Flyout. Com o Discord aberto, ele pede uma autorização: aceite. Vale uma vez; o token é renovado
    sozinho.
 
-O escopo `rpc` do Discord é restrito: o app só funciona para a conta dona dele (ou contas
-adicionadas em **App Testers** no portal), o que basta para uso pessoal.
+**Sem secret (cliente público, PKCE).** Se no app do Discord você ligar **OAuth2 → Public Client**,
+o Client Secret não é necessário: deixe-o vazio no script (ou sem a chave `clientSecret` no
+`discord.json`) e o Flyout autoriza com PKCE. Como o Client ID não é segredo, isso também permite
+embutir um app único no programa (constante `BUILT_IN_DISCORD_CLIENT_ID` em `settings.rs`).
+
+O escopo `rpc` do Discord é restrito, e não está confirmado se um app não aprovado serve contas
+que não são a dona dele (ou **App Testers**). Para conferir, monte o pacote com
+`scripts\pacote-teste-discord.ps1 -ClientId <id>` e peça a uma conta de fora para testar.
 
 ## Desenvolvimento
 

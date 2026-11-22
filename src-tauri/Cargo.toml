@@ -15,6 +15,9 @@ tauri-plugin-store = "2" # persistência das configurações (previsto no briefi
 tauri-plugin-single-instance = "2" # uma instância só (previsto no briefing)
 tauri-plugin-autostart = "2" # iniciar com o Windows (previsto no briefing)
 tauri-plugin-global-shortcut = "2" # atalhos globais (extra pedido pelo usuário)
+sha2 = "0.10" # PKCE do Discord (desafio S256)
+getrandom = "0.3" # PKCE do Discord (verificador aleatório)
+base64 = "0.21" # PKCE do Discord (base64 URL-safe)
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 windows = { version = "0.62", features = [

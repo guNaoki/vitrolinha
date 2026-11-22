@@ -4,9 +4,11 @@
 //! Fala com o app do Discord instalado neste computador pelo IPC local (named pipe
 //! `\\.\pipe\discord-ipc-N`), o mesmo canal que os overlays usam. Só leitura.
 //!
-//! Precisa de um aplicativo próprio no Discord Developer Portal (client id e secret no
-//! settings.json, ver README). Na 1ª vez o Discord pede para autorizar o app; o token
-//! fica guardado no settings.json e é renovado sozinho.
+//! Precisa de um aplicativo no Discord Developer Portal. Sem `clientSecret` no discord.json,
+//! a autorização usa PKCE (app marcado como "Public Client": só o Client ID, que não é
+//! segredo, o que permite embutir um app único no programa). Com `clientSecret`, vale o
+//! fluxo clássico. Na 1ª vez o Discord pede para autorizar o app; o token fica guardado no
+//! discord.json e é renovado sozinho.
 //!
 //! Privacidade: a conversa com o Discord é toda local. A única chamada de rede é a troca
 //! do código de autorização por token (discord.com/api/oauth2/token), feita uma vez a
@@ -19,8 +21,10 @@ use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use serde::Serialize;
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Emitter, Manager};
 use windows::core::HSTRING;
 use windows::Foundation::Uri;
@@ -59,7 +63,7 @@ pub enum Status {
     /// Opção desligada.
     #[default]
     Off,
-    /// Ligada, mas faltam client id/secret (ou o Discord não os aceitou).
+    /// Ligada, mas falta o client id (ou o Discord não o aceitou).
     Setup,
     /// Ligada; o Discord não está aberto (tentando de novo a cada poucos segundos).
     Waiting,
@@ -156,11 +160,14 @@ fn supervise(app: AppHandle, generation: u64) {
     let stale = || app.state::<DiscordState>().generation.load(Ordering::SeqCst) != generation;
 
     let Some((client_id, secret)) = settings::discord_credentials(&app) else {
-        eprintln!("[discord] faltam discordClientId/discordClientSecret no settings.json");
+        eprintln!("[discord] falta o clientId no discord.json");
         only_status(&app, Status::Setup);
         return;
     };
-    eprintln!("[discord] iniciado (geração {generation})");
+    eprintln!(
+        "[discord] iniciado (geração {generation}, autorização: {})",
+        if secret.is_some() { "com secret" } else { "PKCE, cliente público" }
+    );
     while !stale() {
         let pipe = connect();
         eprintln!("[discord] pipe: {}", if pipe.is_some() { "aberto" } else { "não encontrado" });
@@ -226,7 +233,10 @@ struct Session<'a> {
     generation: u64,
     pipe: File,
     client_id: String,
-    secret: String,
+    /// `None` = cliente público (PKCE).
+    secret: Option<String>,
+    /// Verificador PKCE do pedido de autorização em andamento.
+    verifier: Option<String>,
     /// O token que acabamos de obter (não o guardado) foi recusado: não há mais o que tentar.
     fresh_token: bool,
     voice: Voice,
@@ -235,13 +245,14 @@ struct Session<'a> {
 }
 
 impl<'a> Session<'a> {
-    fn new(app: &'a AppHandle, generation: u64, pipe: File, client_id: String, secret: String) -> Self {
+    fn new(app: &'a AppHandle, generation: u64, pipe: File, client_id: String, secret: Option<String>) -> Self {
         Session {
             app,
             generation,
             pipe,
             client_id,
             secret,
+            verifier: None,
             fresh_token: false,
             voice: Voice { status: Status::Waiting, ..Voice::default() },
             subscribed: None,
@@ -326,21 +337,38 @@ impl<'a> Session<'a> {
         eprintln!("[discord] pedindo autorização ao Discord");
         self.voice.status = Status::Authorizing;
         self.publish();
-        Ok(self.send("AUTHORIZE", json!({ "client_id": self.client_id, "scopes": SCOPES }), "authz")?)
+        let mut args = json!({ "client_id": self.client_id, "scopes": SCOPES });
+        if self.secret.is_none() {
+            let verifier = new_verifier()?;
+            args["code_challenge"] = json!(challenge_of(&verifier));
+            args["code_challenge_method"] = json!("S256");
+            self.verifier = Some(verifier);
+        }
+        Ok(self.send("AUTHORIZE", args, "authz")?)
+    }
+
+    /// Campos de identificação do cliente numa chamada a /oauth2/token: o secret, se houver.
+    fn client_auth(&self) -> Vec<(&'static str, String)> {
+        let mut form = vec![("client_id", self.client_id.clone())];
+        if let Some(secret) = &self.secret {
+            form.push(("client_secret", secret.clone()));
+        }
+        form
     }
 
     /// O usuário aprovou no Discord: troca o código por token e autentica.
     fn on_authorized(&mut self, data: &Value) -> Result<(), End> {
         let code = data["code"].as_str().ok_or_else(|| End::Stop(Status::Refused, "AUTHORIZE sem código".into()))?;
         let redirect = settings::discord_redirect_uri(self.app);
-        let token = token_request(&[
-            ("client_id", &self.client_id),
-            ("client_secret", &self.secret),
-            ("grant_type", "authorization_code"),
-            ("code", code),
-            ("redirect_uri", &redirect),
-        ])
-        .map_err(|e| End::Stop(Status::Refused, format!("troca de código por token: {e}")))?;
+        let mut form = self.client_auth();
+        form.push(("grant_type", "authorization_code".into()));
+        form.push(("code", code.to_string()));
+        form.push(("redirect_uri", redirect));
+        if let Some(verifier) = self.verifier.take() {
+            form.push(("code_verifier", verifier));
+        }
+        let token = token_request(&form)
+            .map_err(|e| End::Stop(Status::Refused, format!("troca de código por token: {e}")))?;
         settings::set_discord_token(self.app, Some(&token));
         self.fresh_token = true;
         Ok(self.send("AUTHENTICATE", json!({ "access_token": token.access }), "authn")?)
@@ -362,12 +390,10 @@ impl<'a> Session<'a> {
                 eprintln!("[discord] token recusado ({why}); renovando");
                 let refresh = settings::discord_token(self.app).and_then(|t| t.refresh);
                 if let Some(refresh) = refresh {
-                    let renewed = token_request(&[
-                        ("client_id", &self.client_id),
-                        ("client_secret", &self.secret),
-                        ("grant_type", "refresh_token"),
-                        ("refresh_token", &refresh),
-                    ]);
+                    let mut form = self.client_auth();
+                    form.push(("grant_type", "refresh_token".into()));
+                    form.push(("refresh_token", refresh));
+                    let renewed = token_request(&form);
                     if let Ok(token) = renewed {
                         settings::set_discord_token(self.app, Some(&token));
                         self.fresh_token = true;
@@ -483,14 +509,28 @@ fn parse_member(v: &Value) -> Option<Member> {
     })
 }
 
+// ---------------------------------------------------------------- PKCE (RFC 7636)
+
+/// 32 bytes aleatórios em base64 URL-safe (43 caracteres, dentro do limite de 43–128).
+fn new_verifier() -> Result<String, String> {
+    let mut bytes = [0u8; 32];
+    getrandom::fill(&mut bytes).map_err(|e| format!("sem aleatoriedade para o PKCE: {e}"))?;
+    Ok(URL_SAFE_NO_PAD.encode(bytes))
+}
+
+/// code_challenge do método S256: base64url(SHA-256(verifier)).
+fn challenge_of(verifier: &str) -> String {
+    URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes()))
+}
+
 // ---------------------------------------------------------------- token (HTTP)
 
 /// POST de formulário em /oauth2/token (código → token, ou renovação).
-fn token_request(form: &[(&str, &str)]) -> Result<DiscordToken, String> {
+fn token_request(form: &[(&str, String)]) -> Result<DiscordToken, String> {
     let e = |e: windows::core::Error| e.to_string();
     let body = form
         .iter()
-        .map(|(k, v)| Ok(format!("{k}={}", Uri::EscapeComponent(&HSTRING::from(*v)).map_err(e)?)))
+        .map(|(k, v)| Ok(format!("{k}={}", Uri::EscapeComponent(&HSTRING::from(v.as_str())).map_err(e)?)))
         .collect::<Result<Vec<_>, String>>()?
         .join("&");
     let client = HttpClient::new().map_err(e)?;
@@ -532,6 +572,16 @@ mod tests {
         let m = parse_member(&v).unwrap();
         assert_eq!(m.name, "Nick");
         assert_eq!(m.avatar_url, None);
+    }
+
+    #[test]
+    fn pkce_confere_com_o_vetor_da_rfc_7636() {
+        // Apêndice B da RFC 7636.
+        let verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
+        assert_eq!(challenge_of(verifier), "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM");
+        let novo = new_verifier().unwrap();
+        assert_eq!(novo.len(), 43);
+        assert_ne!(novo, new_verifier().unwrap());
     }
 
     #[test]

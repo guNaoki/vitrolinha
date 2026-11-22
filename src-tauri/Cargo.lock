@@ -1069,8 +1069,11 @@ dependencies = [
 name = "flyout"
 version = "0.1.0"
 dependencies = [
+ "base64 0.21.7",
+ "getrandom 0.3.4",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "tauri",
  "tauri-build",
  "tauri-plugin-autostart",
