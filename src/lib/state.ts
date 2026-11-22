@@ -10,6 +10,7 @@ export type NowPlaying = {
   positionMs: number; // posição no momento da amostra
   durationMs: number; // 0 se a fonte não informa
   sampledAtMs: number; // relógio do sistema (epoch, ms) quando positionMs foi lido
+  canSeek: boolean; // a fonte aceita mudar a posição (barra de progresso clicável)
   artworkPath: string | null; // JPEG temporário ~512px
   accentColor: string | null; // "#rrggbb" da capa; null = âmbar padrão (ou recurso desligado)
   sourceApp: string;

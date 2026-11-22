@@ -100,8 +100,56 @@ body {
   line-height: 1.25;
   color: var(--cream-dim);
 }
-.time {
+/* Linha de duração: acompanha a faixa e, quando a fonte deixa, pula para onde se clica. */
+.seek {
   margin-top: 12px;
+  pointer-events: auto; /* o .info em volta não recebe mouse */
+}
+.seek[hidden] {
+  display: none;
+}
+.seek input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  --v: 0%;
+}
+.seek input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--amber) var(--v), rgba(239, 226, 195, 0.22) var(--v));
+}
+.seek input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4.5px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: 0 0 0 2px rgba(13, 10, 7, 0.6);
+}
+.seek input[type="range"]:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 3px;
+}
+/* Fonte que não aceita pular: só acompanha (sem bolinha, sem mãozinha). */
+.seek input[type="range"]:disabled {
+  cursor: default;
+}
+.seek input[type="range"]:disabled::-webkit-slider-thumb {
+  width: 0;
+  height: 0;
+  box-shadow: none;
+}
+.seek-times {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
   font: 11px/1 var(--font-caps);
   letter-spacing: 0.12em;
   color: var(--cream-dim);
@@ -170,88 +218,6 @@ body:not([data-status="playing"]) .controls .i-pause {
 }
 body:not([data-status="playing"]) .controls .i-play {
   display: block;
-}
-
-/* ---------- Volume (do sistema) ---------- */
-/* À esquerda dos controles, na mesma linha (centro dos botões a 68px da base). */
-.volume {
-  position: absolute;
-  right: 240px;
-  bottom: 52px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.volume[hidden] {
-  display: none;
-}
-.volume button {
-  box-sizing: border-box;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(239, 226, 195, 0.25);
-  border-radius: 50%;
-  background: rgba(13, 10, 7, 0.55);
-  color: var(--cream);
-  cursor: pointer;
-}
-.volume button:hover {
-  border-color: var(--amber);
-}
-.volume button:focus-visible {
-  outline: 2px solid var(--cream);
-  outline-offset: 3px;
-}
-.volume svg {
-  width: 17px;
-  height: 17px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.volume .i-off,
-body[data-muted] .volume .i-on {
-  display: none;
-}
-body[data-muted] .volume .i-off {
-  display: block;
-}
-.volume input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 90px;
-  height: 22px;
-  margin: 0;
-  background: transparent;
-  cursor: pointer;
-  --v: 50%;
-}
-.volume input[type="range"]::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 2px;
-  background: linear-gradient(to right, var(--amber) var(--v), rgba(239, 226, 195, 0.22) var(--v));
-}
-.volume input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  margin-top: -5px;
-  border-radius: 50%;
-  background: var(--cream);
-  box-shadow: 0 0 0 2px rgba(13, 10, 7, 0.6);
-}
-.volume input[type="range"]:focus-visible {
-  outline: 2px solid var(--cream);
-  outline-offset: 3px;
-}
-body[data-hidden] .volume {
-  display: none;
 }
 
 /* ---------- Call do Discord (só na tela cheia) ---------- */
@@ -536,6 +502,60 @@ body[data-mode="free"] .chrome .i-grow {
 body[data-hidden] .chrome {
   display: none;
 }
+
+/* ---------- Volume (do sistema) ---------- */
+/* Na barra de cima, ao lado dos botões: pequeno e discreto como eles (o grande, junto dos controles
+   de tocar, parecia a barra de progresso). Roda do mouse sobre ele também ajusta. */
+.chrome .volume {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 14px;
+}
+.chrome .volume[hidden] {
+  display: none;
+}
+.volume .i-off,
+body[data-muted] .volume .i-on {
+  display: none;
+}
+body[data-muted] .volume .i-off {
+  display: block;
+}
+.chrome .volume input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 72px;
+  height: 22px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+  --v: 50%;
+}
+.chrome:hover .volume input[type="range"],
+.chrome .volume input[type="range"]:focus-visible {
+  opacity: 1;
+}
+.chrome .volume input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--amber) var(--v), rgba(239, 226, 195, 0.22) var(--v));
+}
+.chrome .volume input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 11px;
+  height: 11px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: 0 0 0 2px rgba(13, 10, 7, 0.6);
+}
+.chrome .volume input[type="range"]:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 3px;
+}
 /* Janela livre: a faixa de cima é a alça de arrastar (indicada por um traço sutil). */
 body[data-mode="free"] .chrome {
   cursor: grab;
@@ -776,8 +796,10 @@ html[data-frame="deck"] .artist {
 html[data-frame="deck"] .album {
   font-size: 18px;
 }
-html[data-frame="deck"] .time {
+html[data-frame="deck"] .seek {
   margin-top: 14px;
+}
+html[data-frame="deck"] .seek-times {
   font-size: 13px;
 }
 html[data-frame="deck"] .lyrics {
@@ -795,11 +817,6 @@ html[data-frame="deck"] .lyrics .s1 {
 html[data-frame="deck"] .controls {
   right: 44px;
   bottom: 36px;
-}
-html[data-frame="deck"] .volume {
-  right: 236px;
-  bottom: 48px;
-  pointer-events: auto;
 }
 
 /* ---------- Layout alto (janela vertical) ---------- */
@@ -835,8 +852,23 @@ body[data-layout="tall"] .album {
   margin-top: 8px;
   font-size: 26px;
 }
-body[data-layout="tall"] .time {
+body[data-layout="tall"] .seek {
+  max-width: 760px;
   margin-top: 22px;
+}
+body[data-layout="tall"] .seek input[type="range"] {
+  height: 40px;
+}
+body[data-layout="tall"] .seek input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+}
+body[data-layout="tall"] .seek input[type="range"]::-webkit-slider-thumb {
+  width: 24px;
+  height: 24px;
+  margin-top: -9px;
+}
+body[data-layout="tall"] .seek-times {
   font-size: 20px;
 }
 /* Letra no miolo vazio entre o disco (termina em y≈970) e o texto da faixa. */
@@ -884,35 +916,6 @@ body[data-layout="tall"][data-voice] .lyrics .s1,
 body[data-layout="tall"][data-voice] .lyrics .s-1,
 body[data-layout="tall"][data-voice] .lyrics .s2 {
   font-size: 28px;
-}
-/* Layout alto: o volume sobe para a linha acima dos botões grandes. */
-body[data-layout="tall"] .volume {
-  left: 96px;
-  right: auto;
-  bottom: 240px;
-  height: 56px;
-  gap: 16px;
-}
-body[data-layout="tall"] .volume button {
-  width: 56px;
-  height: 56px;
-}
-body[data-layout="tall"] .volume svg {
-  width: 28px;
-  height: 28px;
-}
-body[data-layout="tall"] .volume input[type="range"] {
-  width: 360px;
-  height: 40px;
-}
-body[data-layout="tall"] .volume input[type="range"]::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 3px;
-}
-body[data-layout="tall"] .volume input[type="range"]::-webkit-slider-thumb {
-  width: 24px;
-  height: 24px;
-  margin-top: -9px;
 }
 body[data-layout="tall"] .controls {
   left: 96px;

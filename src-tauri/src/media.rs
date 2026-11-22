@@ -39,6 +39,8 @@ pub struct NowPlaying {
     pub position_ms: i64,
     pub duration_ms: i64,
     pub sampled_at_ms: i64,
+    /// A fonte aceita mudar a posição (barra de progresso clicável)?
+    pub can_seek: bool,
     pub artwork_path: Option<String>, // JPEG temporário ~512px, ver artwork.rs
     /// Cor de destaque da capa ("#rrggbb"), ver accent.rs. `None` = usar o âmbar padrão.
     pub accent_color: Option<String>,
@@ -55,6 +57,7 @@ impl NowPlaying {
             position_ms: 0,
             duration_ms: 0,
             sampled_at_ms: now_ms(),
+            can_seek: false,
             artwork_path: None,
             accent_color: None,
             source_app: String::new(),
@@ -84,6 +87,7 @@ impl NowPlaying {
             || self.status != prev.status
             || self.source_app != prev.source_app
             || self.duration_ms != prev.duration_ms
+            || self.can_seek != prev.can_seek
             || self.artwork_path != prev.artwork_path
             || (prev.position_at(self.sampled_at_ms) - self.position_ms).abs() > DRIFT_MS
     }
@@ -201,6 +205,41 @@ pub fn control(state: &SharedState, what: Control) -> std::result::Result<(), St
     Ok(())
 }
 
+/// Pula para `position_ms` (a partir do início da faixa) na fonte atual.
+/// Como em `control`, a espera fica numa thread curta; se a fonte recusar, reemite o
+/// estado guardado para o front desfazer a posição otimista da barra.
+pub fn seek(app: &AppHandle, position_ms: i64) -> std::result::Result<(), String> {
+    let state = app.state::<SharedState>();
+    let manager = state.manager.lock().unwrap().clone().ok_or("mídia ainda não iniciada")?;
+    let source = state.source.lock().unwrap().clone();
+    let session = pick_session(&manager, source.as_deref()).map_err(|_| "nenhuma sessão de mídia ativa")?;
+    let app = app.clone();
+    thread::spawn(move || {
+        let result = unsafe { RoInitialize(RO_INIT_MULTITHREADED) }.and_then(|_| {
+            // Posição = início da linha do tempo + o pedido, em unidades de 100 ns.
+            let start = session.GetTimelineProperties()?.StartTime()?.Duration;
+            session.TryChangePlaybackPositionAsync(start + position_ms.max(0) * 10_000)?.join()
+        });
+        match result {
+            Ok(true) => {
+                let state = app.state::<SharedState>();
+                if let Some(tx) = state.wake.lock().unwrap().as_ref() {
+                    let _ = tx.send(()); // relê a posição real
+                }
+            }
+            Ok(false) => {
+                eprintln!("[media] a fonte recusou mudar a posição");
+                refresh(&app);
+            }
+            Err(e) => {
+                eprintln!("[media] falha ao mudar a posição: {e}");
+                refresh(&app);
+            }
+        }
+    });
+    Ok(())
+}
+
 fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
@@ -225,7 +264,9 @@ fn status_str(s: PlaybackStatus) -> &'static str {
 /// enquanto for a mesma faixa reaproveita a anterior.
 fn sample(session: &Session, last: Option<&NowPlaying>, art: &mut ArtCache) -> Result<NowPlaying> {
     let props = session.TryGetMediaPropertiesAsync()?.join()?;
-    let status = status_str(session.GetPlaybackInfo()?.PlaybackStatus()?);
+    let info = session.GetPlaybackInfo()?;
+    let status = status_str(info.PlaybackStatus()?);
+    let can_seek = info.Controls().and_then(|c| c.IsPlaybackPositionEnabled()).unwrap_or(false);
     let tl = session.GetTimelineProperties()?;
 
     // TimeSpan.Duration: unidades de 100 ns.
@@ -273,6 +314,7 @@ fn sample(session: &Session, last: Option<&NowPlaying>, art: &mut ArtCache) -> R
         position_ms,
         duration_ms,
         sampled_at_ms: now,
+        can_seek,
         artwork_path,
         accent_color,
         source_app,

@@ -1,3 +1,4 @@
+import "./lib/dev-mock"; // só em dev no navegador (ver o arquivo)
 import { applyAccent } from "./lib/accent";
 import { armAngle, PANEL_ARM, setArm } from "./lib/arm";
 import { setCover } from "./lib/disc";
@@ -21,8 +22,9 @@ import {
 import { LyricsView, type Lyrics } from "./lib/lyrics";
 import { Shelf } from "./lib/shelf";
 import { VoiceList } from "./lib/voice";
+import { SeekBar } from "./lib/seek";
 import { VolumeControl } from "./lib/volume";
-import { formatTime, livePositionMs, type NowPlaying } from "./lib/state";
+import { livePositionMs, type NowPlaying } from "./lib/state";
 
 const $ = (id: string) => document.getElementById(id)!;
 const el = {
@@ -33,7 +35,6 @@ const el = {
   title: $("title"),
   artist: $("artist"),
   album: $("album"),
-  time: $("time"),
   prev: $("btn-prev") as HTMLButtonElement,
   play: $("btn-play") as HTMLButtonElement,
   next: $("btn-next") as HTMLButtonElement,
@@ -88,13 +89,23 @@ function fit() {
   document.body.dataset.layout = tall ? "tall" : "wide";
 }
 
+/** Linha de duração. Pular: o relógio muda na hora; a fonte confirma (ou recusa) depois. */
+const seekBar = new SeekBar(
+  $("seek"),
+  $("seek-bar") as HTMLInputElement,
+  $("seek-pos"),
+  $("seek-dur"),
+  (positionMs) => {
+    if (!current) return;
+    current = { ...current, positionMs, sampledAtMs: Date.now() };
+    renderTime();
+    renderArm(true);
+    syncLyrics();
+  },
+);
+
 function renderTime() {
-  const s = current;
-  if (!s || s.durationMs <= 0) {
-    el.time.textContent = ""; // sem duração → tempo escondido
-    return;
-  }
-  el.time.textContent = `${formatTime(livePositionMs(s))} / ${formatTime(s.durationMs)}`;
+  seekBar.render(current); // sem duração, a linha some
 }
 
 function renderArm(sweep: boolean) {

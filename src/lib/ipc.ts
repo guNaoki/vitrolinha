@@ -15,6 +15,8 @@ export const onLyrics = (cb: (l: Lyrics | null) => void): Promise<UnlistenFn> =>
 export const togglePlayPause = () => invoke<void>("toggle_play_pause");
 export const next = () => invoke<void>("next");
 export const previous = () => invoke<void>("previous");
+/** Pula para `positionMs` (desde o início da faixa). */
+export const seek = (positionMs: number) => invoke<void>("seek", { positionMs });
 
 /** Minimiza o painel (volta pela barra de tarefas ou pelo ícone da bandeja). */
 export const minimizePanel = () => invoke<void>("minimize_panel");

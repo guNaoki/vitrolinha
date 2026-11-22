@@ -95,21 +95,12 @@
         <h1 id="title">—</h1>
         <p class="artist" id="artist"></p>
         <p class="album" id="album"></p>
-        <p class="time" id="time"></p>
+        <!-- Linha de duração: acompanha a faixa e, se a fonte deixa, pula para onde você clicar -->
+        <div class="seek" id="seek" hidden>
+          <input type="range" id="seek-bar" min="0" max="1" step="1" value="0" aria-label="Posição na música" />
+          <div class="seek-times"><span id="seek-pos">0:00</span><span id="seek-dur">0:00</span></div>
+        </div>
       </section>
-
-      <!-- Volume do sistema: botão de mudo + controle deslizante (roda do mouse também) -->
-      <div class="volume" id="volume" hidden>
-        <button type="button" id="btn-mute" aria-label="Silenciar" title="Silenciar">
-          <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 9v6h4l5 4V5L8 9zM16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" />
-          </svg>
-          <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 9v6h4l5 4V5L8 9zM16.5 9.5l5 5M21.5 9.5l-5 5" />
-          </svg>
-        </button>
-        <input type="range" id="vol" min="0" max="100" step="1" value="50" aria-label="Volume" />
-      </div>
 
       <!-- Controles: habilitados quando há uma sessão de mídia -->
       <div class="controls">
@@ -163,6 +154,18 @@
         </svg>
         <svg class="i-grow" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="1.5" /></svg>
       </button>
+      <!-- Volume do sistema: botão de mudo + controle deslizante (roda do mouse também) -->
+      <div class="volume" id="volume" hidden>
+        <button type="button" id="btn-mute" aria-label="Silenciar" title="Silenciar">
+          <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9zM16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" />
+          </svg>
+          <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9zM16.5 9.5l5 5M21.5 9.5l-5 5" />
+          </svg>
+        </button>
+        <input type="range" id="vol" min="0" max="100" step="1" value="50" aria-label="Volume" />
+      </div>
     </div>
     <script type="module" src="./panel.ts"></script>
   </body>

@@ -41,6 +41,12 @@ fn previous(state: State<SharedState>) -> Result<(), String> {
     media::control(&state, Control::Previous)
 }
 
+/// Barra de progresso do painel: pula para essa posição (ms desde o início da faixa).
+#[tauri::command]
+fn seek(app: tauri::AppHandle, position_ms: i64) -> Result<(), String> {
+    media::seek(&app, position_ms)
+}
+
 /// O painel está em modo de janela livre? (o front só mostra a barra de arrastar nele)
 #[tauri::command]
 fn panel_is_free(app: tauri::AppHandle) -> bool {
@@ -130,6 +136,7 @@ fn main() {
             toggle_play_pause,
             next,
             previous,
+            seek,
             minimize_panel,
             toggle_panel_size,
             get_disk_fx,
