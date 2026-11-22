@@ -50,6 +50,24 @@ export const getVolume = () => invoke<Volume | null>("get_volume");
 export const setVolume = (level: number) => invoke<Volume | null>("set_volume", { level });
 export const toggleMute = () => invoke<Volume | null>("toggle_mute");
 
+/** Call de voz do Discord (espelha `Voice` em discord.rs). */
+export type VoiceMember = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  muted: boolean;
+  deafened: boolean;
+  speaking: boolean;
+};
+export type Voice = {
+  status: "off" | "setup" | "waiting" | "authorizing" | "refused" | "connected";
+  channel: string | null;
+  members: VoiceMember[];
+};
+export const getVoice = () => invoke<Voice>("get_voice");
+export const onVoice = (cb: (v: Voice) => void): Promise<UnlistenFn> =>
+  listen<Voice>("voice", (e) => cb(e.payload));
+
 /** Efeitos do disco: "off" | "soft" | "strong" (menu da bandeja). */
 export type DiskFx = "off" | "soft" | "strong";
 export const getDiskFx = () => invoke<DiskFx>("get_disk_fx");

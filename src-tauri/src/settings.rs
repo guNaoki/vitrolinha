@@ -107,6 +107,96 @@ pub fn set_dynamic_color(app: &AppHandle, on: bool) {
     set(app, "dynamicColor", json!(on));
 }
 
+// ---- Discord: arquivo próprio (discord.json)
+// Fica fora do settings.json de propósito: aquele é regravado pelo app a partir de uma cópia
+// em memória (editar com o app aberto perde a edição; um BOM invalida o arquivo todo).
+// Este é relido do disco a cada uso, aceita BOM e só é gravado por leitura-modificação-escrita
+// (arquivo temporário + renomear), então nada além de uma gravação deliberada o altera.
+// Chaves: `enabled`, `clientId`, `clientSecret`, `redirectUri`, `token`. Se `discord.json`
+// não tem a chave, vale o que houver no settings.json (versão antiga).
+
+fn discord_file(app: &AppHandle) -> Option<std::path::PathBuf> {
+    use tauri::Manager;
+    app.path().app_data_dir().ok().map(|d| d.join("discord.json"))
+}
+
+fn discord_read(app: &AppHandle) -> serde_json::Map<String, Value> {
+    let Some(path) = discord_file(app) else { return Default::default() };
+    let Ok(bytes) = std::fs::read(&path) else { return Default::default() };
+    let bytes = bytes.strip_prefix(&[0xEF, 0xBB, 0xBF][..]).unwrap_or(&bytes);
+    match serde_json::from_slice(bytes) {
+        Ok(Value::Object(map)) => map,
+        _ => {
+            eprintln!("[settings] discord.json inválido; ignorando");
+            Default::default()
+        }
+    }
+}
+
+fn discord_get<T: DeserializeOwned>(app: &AppHandle, key: &str, old_key: &str) -> Option<T> {
+    discord_read(app)
+        .remove(key)
+        .and_then(|v| serde_json::from_value(v).ok())
+        .or_else(|| get(app, old_key))
+}
+
+fn discord_set(app: &AppHandle, key: &str, value: Value) {
+    let Some(path) = discord_file(app) else { return };
+    let mut map = discord_read(app);
+    if value.is_null() {
+        map.remove(key);
+    } else {
+        map.insert(key.to_string(), value);
+    }
+    let tmp = path.with_extension("json.tmp");
+    let result = serde_json::to_vec_pretty(&Value::Object(map))
+        .map_err(|e| e.to_string())
+        .and_then(|bytes| {
+            if let Some(dir) = path.parent() {
+                std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+            }
+            std::fs::write(&tmp, bytes).map_err(|e| e.to_string())?;
+            std::fs::rename(&tmp, &path).map_err(|e| e.to_string())
+        });
+    if let Err(e) = result {
+        eprintln!("[settings] falha ao gravar discord.json: {e}");
+    }
+}
+
+/// Lista da call de voz do Discord na tela cheia (padrão: não — precisa de um app próprio
+/// no Discord Developer Portal; ver README e scripts/discord-setup.ps1).
+pub fn discord_enabled(app: &AppHandle) -> bool {
+    discord_get(app, "enabled", "discordEnabled").unwrap_or(false)
+}
+pub fn set_discord_enabled(app: &AppHandle, on: bool) {
+    discord_set(app, "enabled", json!(on));
+}
+/// (client id, client secret) do app do Discord; `None` se faltar algum.
+pub fn discord_credentials(app: &AppHandle) -> Option<(String, String)> {
+    let id = discord_get::<String>(app, "clientId", "discordClientId")?.trim().to_string();
+    let secret = discord_get::<String>(app, "clientSecret", "discordClientSecret")?.trim().to_string();
+    (!id.is_empty() && !secret.is_empty()).then_some((id, secret))
+}
+/// Redirect cadastrado no app (aba OAuth2); o padrão é o que o README manda cadastrar.
+pub fn discord_redirect_uri(app: &AppHandle) -> String {
+    discord_get::<String>(app, "redirectUri", "discordRedirectUri")
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "http://localhost".to_string())
+}
+/// Token do Discord guardado após a 1ª autorização (para não pedir de novo).
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DiscordToken {
+    pub access: String,
+    pub refresh: Option<String>,
+}
+pub fn discord_token(app: &AppHandle) -> Option<DiscordToken> {
+    discord_get(app, "token", "discordToken")
+}
+pub fn set_discord_token(app: &AppHandle, token: Option<&DiscordToken>) {
+    discord_set(app, "token", json!(token));
+}
+
 /// Popup ligado? (padrão: sim)
 pub fn popup_enabled(app: &AppHandle) -> bool {
     get(app, "popupEnabled").unwrap_or(true)

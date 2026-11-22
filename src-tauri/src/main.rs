@@ -3,6 +3,7 @@
 
 mod accent;
 mod artwork;
+mod discord;
 mod fullscreen;
 mod hdcover;
 mod history;
@@ -82,6 +83,12 @@ fn toggle_mute() -> Option<volume::Volume> {
     volume::toggle_mute()
 }
 
+/// Call de voz do Discord (lista na tela cheia); mudanças chegam pelo evento `voice`.
+#[tauri::command]
+fn get_voice(app: tauri::AppHandle) -> discord::Voice {
+    discord::current(&app)
+}
+
 /// Nível dos efeitos do disco ("off" | "soft" | "strong"); mudanças chegam pelo evento `disk-fx`.
 #[tauri::command]
 fn get_disk_fx(app: tauri::AppHandle) -> String {
@@ -114,8 +121,10 @@ fn main() {
         .manage(lyrics::LyricsState::default())
         .manage(hdcover::HdState::default())
         .manage(history::HistoryState::default())
+        .manage(discord::DiscordState::default())
         .invoke_handler(tauri::generate_handler![
             get_state,
+            get_voice,
             get_lyrics,
             toggle_play_pause,
             next,
@@ -153,6 +162,7 @@ fn main() {
             popup::init(handle);
             shortcuts::apply(handle);
             media::start(handle.clone());
+            discord::reload(handle);
             Ok(())
         })
         .run(tauri::generate_context!())

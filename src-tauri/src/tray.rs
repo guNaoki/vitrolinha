@@ -16,6 +16,7 @@ const ID_POPUP: &str = "popup";
 const ID_POPUP_PLAY_PAUSE: &str = "popup-play-pause";
 const ID_PANEL: &str = "panel";
 const ID_FILL: &str = "fill";
+const ID_DISCORD: &str = "discord";
 const ID_DYNAMIC_COLOR: &str = "dynamic-color";
 const ID_LYRICS: &str = "lyrics";
 const ID_HD_COVER: &str = "hd-cover";
@@ -172,6 +173,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let dynamic = check(app, ID_DYNAMIC_COLOR, "Cor de destaque da capa", settings::dynamic_color(app))?;
     let lyrics = check(app, ID_LYRICS, "Letras sincronizadas (consulta lrclib.net)", settings::lyrics_enabled(app))?;
     let hd_cover = check(app, ID_HD_COVER, "Capa em alta resolução (consulta iTunes)", settings::hd_cover(app))?;
+    let discord = check(app, ID_DISCORD, "Call do Discord na tela cheia (precisa de configuração)", settings::discord_enabled(app))?;
     let shortcuts = check(
         app,
         ID_SHORTCUTS,
@@ -191,6 +193,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &dynamic,
             &lyrics,
             &hd_cover,
+            &discord,
             &shortcuts,
             &autostart,
             &PredefinedMenuItem::separator(app)?,
@@ -218,6 +221,10 @@ fn on_menu(app: &AppHandle, id: &str) {
         ID_HD_COVER => {
             settings::set_hd_cover(app, !settings::hd_cover(app));
             hdcover::reload(app); // busca (ou deixa de usar) a capa grande da faixa atual
+        }
+        ID_DISCORD => {
+            settings::set_discord_enabled(app, !settings::discord_enabled(app));
+            crate::discord::reload(app); // conecta (ou desconecta) na hora
         }
         ID_SHORTCUTS => {
             settings::set_shortcuts_enabled(app, !settings::shortcuts_enabled(app));

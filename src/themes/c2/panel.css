@@ -254,6 +254,175 @@ body[data-hidden] .volume {
   display: none;
 }
 
+/* ---------- Call do Discord (só na tela cheia) ---------- */
+/* Fora do palco, em múltiplos da escala do palco (--u = 1 unidade do palco em px) para
+   ler bem em qualquer monitor. Sem caixa: a lista flutua sobre o fundo, com um título e
+   um fio fino. Acima do grão e da vinheta, abaixo da estante e da barra de cima.
+   Layout largo: canto de cima à esquerda, compacto (sobre o disco escuro, fora da etiqueta).
+   Layout alto: coluna da direita, no vazio entre o disco e o texto da faixa. */
+.voice {
+  --u: calc(var(--s, 1) * 1px);
+  position: fixed;
+  left: calc(var(--u) * 36);
+  top: calc(var(--u) * 32);
+  z-index: 7;
+  box-sizing: border-box;
+  width: calc(var(--u) * 236);
+  pointer-events: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 14px rgba(0, 0, 0, 0.8);
+}
+.voice[hidden],
+.voice [hidden] {
+  display: none;
+}
+.voice p {
+  margin: 0;
+}
+/* "Na call" + nome do canal, com um fio embaixo. */
+.voice-head {
+  margin-bottom: calc(var(--u) * 12);
+  padding-bottom: calc(var(--u) * 10);
+  border-bottom: 1px solid rgba(239, 226, 195, 0.16);
+  font-size: calc(var(--u) * 18);
+  font-style: italic;
+  line-height: 1.2;
+  color: var(--cream-artist);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.voice-head::before {
+  content: "Na call";
+  display: block;
+  margin-bottom: calc(var(--u) * 7);
+  font: normal calc(var(--u) * 11) / 1 var(--font-caps);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.voice-hint {
+  font-size: calc(var(--u) * 16);
+  font-style: italic;
+  line-height: 1.3;
+  color: var(--cream-dim);
+}
+.voice-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 10);
+}
+.voice-list li {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 10);
+  color: var(--cream);
+}
+.voice-avatar {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: calc(var(--u) * 36);
+  height: calc(var(--u) * 36);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #2a251e;
+  font: calc(var(--u) * 13) / 1 var(--font-caps);
+  color: var(--cream-dim);
+  /* Anel fino e apagado em quem está calado; acende em quem fala (a sombra do próprio
+     avatar não é cortada pelo overflow dele). */
+  box-shadow: 0 0 0 calc(var(--u) * 2) rgba(239, 226, 195, 0.1);
+  transition: box-shadow 0.18s ease;
+}
+.voice-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.voice-list li.speaking .voice-avatar {
+  box-shadow:
+    0 0 0 calc(var(--u) * 2.5) var(--amber),
+    0 0 calc(var(--u) * 16) color-mix(in srgb, var(--amber) 65%, transparent);
+}
+.voice-name {
+  min-width: 0;
+  flex: 1;
+  font-size: calc(var(--u) * 20);
+  line-height: 1.2;
+  color: var(--cream-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.18s ease;
+}
+.voice-list li.speaking .voice-name {
+  color: var(--cream);
+}
+.voice-list li.quiet .voice-avatar {
+  opacity: 0.5; /* mudo/surdo */
+}
+.voice-flags svg {
+  display: block;
+  width: calc(var(--u) * 17);
+  height: calc(var(--u) * 17);
+  fill: none;
+  stroke: var(--cream-dim);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+}
+.voice-more {
+  margin-top: calc(var(--u) * 10);
+  padding-left: calc(var(--u) * 46);
+  font: calc(var(--u) * 12) / 1 var(--font-caps);
+  letter-spacing: 0.14em;
+  color: var(--cream-dim);
+}
+/* Layout alto: coluna da direita, sem véu (o fundo ali é vazio), alinhada à margem da letra. */
+body[data-layout="tall"] .voice {
+  left: auto;
+  right: calc(var(--u) * 96);
+  top: calc(var(--u) * 1000);
+  width: calc(var(--u) * 420);
+}
+body[data-layout="tall"] .voice-list {
+  gap: calc(var(--u) * 14);
+}
+body[data-layout="tall"] .voice-list li {
+  gap: calc(var(--u) * 14);
+}
+body[data-layout="tall"] .voice-avatar {
+  width: calc(var(--u) * 56);
+  height: calc(var(--u) * 56);
+  font-size: calc(var(--u) * 18);
+}
+body[data-layout="tall"] .voice-name {
+  font-size: calc(var(--u) * 30);
+}
+body[data-layout="tall"] .voice-head {
+  margin-bottom: calc(var(--u) * 16);
+  padding-bottom: calc(var(--u) * 12);
+  font-size: calc(var(--u) * 26);
+}
+body[data-layout="tall"] .voice-head::before {
+  font-size: calc(var(--u) * 13);
+}
+body[data-layout="tall"] .voice-more {
+  padding-left: calc(var(--u) * 70);
+}
+/* Só na tela cheia; escondida com o painel (sem animação rodando à toa). */
+body[data-mode="free"] .voice,
+body[data-hidden] .voice {
+  display: none;
+}
+
 /* ---------- Letra sincronizada ---------- */
 /* Layout largo: duas linhas (atual + próxima) no canto inferior esquerdo, abaixo do
    selo (que termina em y≈610) e à esquerda do braço (em y≥620 ele está em x≤900). */
@@ -277,59 +446,22 @@ body[data-hidden] .volume {
 .lyrics .s2 {
   display: none; /* só no layout alto */
 }
+/* Linha atual: acesa por inteiro (a letra só traz o instante de cada LINHA; o brilho palavra
+   por palavra era uma estimativa e não batia). Traço fino dá "peso" e o brilho segue o destaque. */
 .lyrics .s0 {
   font-size: 34px;
-  color: var(--cream-dim);
-  word-spacing: 0.12em; /* as palavras acesas ficam um pouco mais largas (traço + escala) */
+  color: var(--cream);
+  -webkit-text-stroke: 0.03em var(--cream);
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.8),
+    0 0 0.4em color-mix(in srgb, var(--amber) 80%, transparent),
+    0 0 1em color-mix(in srgb, var(--amber) 45%, transparent);
 }
 .lyrics .s1 {
   margin-top: 4px;
   font-size: 21px;
   color: var(--cream-dim);
   opacity: 0.8;
-}
-
-/* Brilho palavra por palavra (lib/lyrics.ts).
-   Cada palavra tem duas camadas: o texto base (apagado) e um ::after aceso, com
-   traço (parece mais pesado) e brilho na cor de destaque. O ::after só muda de
-   `opacity`, e a palavra cresce de leve com `transform`; o `--d` de cada palavra
-   (transition-delay) faz o acendimento seguir a música. */
-.lyrics .s0 .w {
-  position: relative;
-  display: inline-block;
-  white-space: pre;
-  transform-origin: 50% 80%;
-  transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d, 0ms);
-}
-.lyrics .s0 .w::after {
-  content: attr(data-t);
-  position: absolute;
-  left: 0;
-  top: 0;
-  color: var(--cream);
-  -webkit-text-stroke: 0.03em var(--cream); /* "peso" extra nas palavras acesas */
-  text-shadow:
-    0 0 0.4em color-mix(in srgb, var(--amber) 80%, transparent),
-    0 0 1em color-mix(in srgb, var(--amber) 45%, transparent);
-  opacity: 0;
-  transition: opacity 0.24s ease var(--d, 0ms);
-}
-.lyrics .s0 .w.on {
-  transform: scale(1.025);
-}
-.lyrics .s0 .w.on::after {
-  opacity: 1;
-}
-/* Pausado (ou sem animação): estado final direto, sem transição. */
-.lyrics .s0.static .w,
-.lyrics .s0.static .w::after {
-  transition: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .lyrics .s0 .w,
-  .lyrics .s0 .w::after {
-    transition: none;
-  }
 }
 body[data-hidden] .lyrics {
   display: none;
@@ -738,6 +870,20 @@ body[data-layout="tall"] .lyrics .s2 {
   font-size: 34px;
   color: var(--cream-dim);
   opacity: 0.55;
+}
+/* Layout alto com call do Discord: a letra cede a coluna da direita (420 + folgas) e
+   fica um pouco menor, para quebrar em no máximo 2 linhas. */
+body[data-layout="tall"][data-voice] .lyrics {
+  right: 556px;
+}
+body[data-layout="tall"][data-voice] .lyrics .s0 {
+  margin: 18px 0;
+  font-size: 48px;
+}
+body[data-layout="tall"][data-voice] .lyrics .s1,
+body[data-layout="tall"][data-voice] .lyrics .s-1,
+body[data-layout="tall"][data-voice] .lyrics .s2 {
+  font-size: 28px;
 }
 /* Layout alto: o volume sobe para a linha acima dos botões grandes. */
 body[data-layout="tall"] .volume {

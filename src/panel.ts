@@ -5,12 +5,14 @@ import { initDiskFx } from "./lib/fx";
 import {
   getLyrics,
   getState,
+  getVoice,
   isPanelFree,
   minimizePanel,
   next,
   onLyrics,
   onNowPlaying,
   onPanelFree,
+  onVoice,
   togglePanelSize,
   onPanelVisible,
   previous,
@@ -18,6 +20,7 @@ import {
 } from "./lib/ipc";
 import { LyricsView, type Lyrics } from "./lib/lyrics";
 import { Shelf } from "./lib/shelf";
+import { VoiceList } from "./lib/voice";
 import { VolumeControl } from "./lib/volume";
 import { formatTime, livePositionMs, type NowPlaying } from "./lib/state";
 
@@ -274,6 +277,12 @@ addEventListener("resize", fit);
 initDiskFx();
 fit();
 syncVolume();
+
+// Call do Discord: o Rust manda o estado inteiro a cada mudança (some em janela livre, via CSS).
+const voiceList = new VoiceList($("voice"));
+void onVoice((v) => voiceList.render(v));
+void getVoice().then((v) => voiceList.render(v)).catch(() => {});
+if (import.meta.env.DEV) (window as unknown as { __voice: VoiceList }).__voice = voiceList; // teste no navegador
 
 void onNowPlaying(render);
 void onLyrics(applyLyrics);
