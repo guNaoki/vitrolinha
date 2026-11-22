@@ -33,6 +33,13 @@ Windows 10 ou 11 de 64 bits. Feito e testado no Windows 11.
 > Executar assim mesmo**. Para conferir o arquivo, compare o SHA256 com o de `SHA256SUMS.txt`
 > na mesma página; o instalador é compilado pelo GitHub Actions a partir deste código.
 
+## Algo deu errado?
+
+Clique com o botão direito no ícone da bandeja → **Abrir a pasta de logs** e cole o fim do
+`vitrolinha.log` numa [issue](https://github.com/guNaoki/vitrolinha/issues/new/choose). O log
+traz só erros e estados do app, cada linha com data e hora; não traz o que você ouve. Fica em
+`%LOCALAPPDATA%\app.vitrolinha\logs` (até 1 MB, mais o arquivo anterior).
+
 ## Compilar do código-fonte
 
 Precisa de Node, Rust e as ferramentas de build do Visual Studio (MSVC).
@@ -83,12 +90,21 @@ npm run dev            # só o front-end, no navegador (sem o Rust)
 cd src-tauri; cargo test
 ```
 
+Ao mudar as dependências (`Cargo.lock` ou `package-lock.json`), regenere os avisos de licença:
+`python -I scripts/third-party.py` (o CI confere se `THIRD-PARTY-LICENSES.txt` está em dia).
+
+## Licença
+
+[MIT](LICENSE). As licenças das dependências e das fontes estão em
+[THIRD-PARTY-LICENSES.txt](THIRD-PARTY-LICENSES.txt), que também vai dentro do instalador.
+Não é afiliada ao Discord, à Apple (iTunes) nem ao lrclib.
+
 ## Privacidade
 
 Nada sai do computador por padrão, exceto, se ligados no menu da bandeja: busca de letras
 (artista, título, álbum e duração → lrclib.net) e de capa grande (artista e título →
 itunes.apple.com). A estante fica em `%APPDATA%\app.vitrolinha\shelf` e pode ser
-desligada e apagada pelo menu.
+desligada e apagada pelo menu. O log de diagnóstico fica só neste computador.
 
 A call do Discord (desligada por padrão) conversa só com o app do Discord no próprio
 computador. Na rede: a troca do código de autorização por token (discord.com) e as fotos de

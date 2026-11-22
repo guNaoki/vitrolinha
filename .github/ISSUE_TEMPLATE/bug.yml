@@ -1,0 +1,43 @@
+name: Relatar um problema
+description: Algo não funciona como deveria
+labels: [bug]
+body:
+  - type: textarea
+    id: o-que-aconteceu
+    attributes:
+      label: O que aconteceu?
+      description: O que você esperava e o que viu no lugar. Se puder, diga como repetir.
+    validations:
+      required: true
+  - type: input
+    id: versao
+    attributes:
+      label: Versão da Vitrolinha
+      description: Aparece no nome do instalador (ex.: 0.1.0) e na primeira linha do log.
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Versão do Windows
+      description: "Ex.: Windows 11 23H2. Digite `winver` no menu Iniciar para ver."
+    validations:
+      required: true
+  - type: input
+    id: player
+    attributes:
+      label: App que está tocando
+      description: "Ex.: Spotify, YouTube Music no Chrome, Tidal."
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: |
+        Clique com o botão direito no ícone da bandeja → **Abrir a pasta de logs** e cole aqui o fim do arquivo `vitrolinha.log`.
+        O log traz só erros e estados do app; não traz o que você ouve. Confira antes de colar.
+      render: text
+  - type: textarea
+    id: extra
+    attributes:
+      label: Mais alguma coisa?
+      description: Prints, quantos monitores você usa, opções ligadas no menu da bandeja.

@@ -24,6 +24,7 @@ const ID_HISTORY: &str = "history";
 const ID_CLEAR_HISTORY: &str = "clear-history";
 const ID_SHORTCUTS: &str = "shortcuts";
 const ID_AUTOSTART: &str = "autostart";
+const ID_LOGS: &str = "logs";
 const ID_QUIT: &str = "quit";
 const PREFIX_MONITOR: &str = "monitor:";
 const PREFIX_SOURCE: &str = "source:";
@@ -181,6 +182,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         settings::shortcuts_enabled(app),
     )?;
     let autostart = check(app, ID_AUTOSTART, "Iniciar com o Windows", app.autolaunch().is_enabled().unwrap_or(false))?;
+    let logs = MenuItem::with_id(app, ID_LOGS, "Abrir a pasta de logs (para relatar um problema)", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, ID_QUIT, "Sair", true, None::<&str>)?;
     Menu::with_items(
         app,
@@ -197,6 +199,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &shortcuts,
             &autostart,
             &PredefinedMenuItem::separator(app)?,
+            &logs,
             &quit,
         ],
     )
@@ -237,6 +240,7 @@ fn on_menu(app: &AppHandle, id: &str) {
                 eprintln!("[autostart] falha: {e}");
             }
         }
+        ID_LOGS => crate::logfile::open_folder(app),
         ID_QUIT => app.exit(0),
         _ => {
             if let Some(source) = id.strip_prefix(PREFIX_SOURCE) {

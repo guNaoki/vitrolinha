@@ -39,6 +39,13 @@ jobs:
         shell: pwsh
         run: ./scripts/build-release.ps1
 
+      - name: Licenças de terceiros em dia
+        shell: pwsh
+        run: |
+          python -I scripts/third-party.py
+          git diff --exit-code THIRD-PARTY-LICENSES.txt
+          if ($LASTEXITCODE -ne 0) { throw 'THIRD-PARTY-LICENSES.txt está desatualizado: rode python -I scripts/third-party.py e faça o commit' }
+
       - name: Empacotar
         shell: pwsh
         run: |
@@ -51,7 +58,7 @@ jobs:
           Copy-Item "$release/bundle/nsis/Vitrolinha_${ver}_x64-setup.exe" $saida
           # Portátil: o exe solto (precisa do WebView2, que já vem no Windows 11 e na maioria dos 10).
           $porta = New-Item -ItemType Directory -Force "portatil/Vitrolinha"
-          Copy-Item "$release/vitrolinha.exe", LICENSE $porta
+          Copy-Item "$release/vitrolinha.exe", LICENSE, THIRD-PARTY-LICENSES.txt $porta
           Compress-Archive -Path $porta.FullName -DestinationPath "$saida/Vitrolinha_${ver}_x64-portatil.zip"
           $linhas = Get-ChildItem $saida -File | ForEach-Object {
             "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name

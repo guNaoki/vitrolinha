@@ -7,6 +7,7 @@ mod discord;
 mod fullscreen;
 mod hdcover;
 mod history;
+mod logfile;
 mod lyrics;
 mod media;
 mod popup;
@@ -157,6 +158,7 @@ fn main() {
         })
         .setup(|app| {
             let handle = app.handle();
+            logfile::init(handle); // primeiro: o que vier depois já cai no arquivo de log
             tray::init(handle)?;
             windows::apply_panel_visibility(handle);
             popup::init(handle);

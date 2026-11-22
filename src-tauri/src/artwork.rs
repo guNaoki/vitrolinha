@@ -57,7 +57,8 @@ impl ArtCache {
         self.seq += 1; // nome novo a cada capa: sem cache velho no WebView
         let path = self.dir.join(format!("{}.jpg", self.seq));
         if let Err(e) = fs::write(&path, bytes) {
-            eprintln!("[art] falha ao gravar {}: {e}", path.display());
+            // Só o nome do arquivo: o caminho completo tem o seu usuário do Windows, e o log é feito para ser colado em issues.
+            eprintln!("[art] falha ao gravar {}: {e}", path.file_name().unwrap_or_default().to_string_lossy());
             return None;
         }
         remove(self.current.replace(path.clone()).as_deref());
