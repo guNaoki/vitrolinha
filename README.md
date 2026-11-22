@@ -18,16 +18,33 @@ Tauri 2 (Rust) + TypeScript/CSS puro + Vite.
 - Volume do sistema, filtro de fonte de mídia (ex.: só YouTube Music), atalhos globais
 - Menu na bandeja com todas as configurações
 
-## Usar no dia a dia
+## Instalar
+
+Baixe o instalador `Vitrolinha_*_x64-setup.exe` na página de
+[Releases](https://github.com/guNaoki/vitrolinha/releases) e abra. Instala só para o seu usuário
+(não pede administrador), cria o atalho no menu Iniciar e dá para desinstalar pelo Windows.
+Também há um `.zip` portátil. Para abrir junto com o Windows, use "Iniciar com o Windows" no
+menu da bandeja.
+
+Windows 10 ou 11 de 64 bits. Feito e testado no Windows 11.
+
+> **O Windows avisou "O Windows protegeu o computador"?** O instalador ainda não é assinado
+> digitalmente, e o SmartScreen avisa sobre apps novos. Clique em **Mais informações →
+> Executar assim mesmo**. Para conferir o arquivo, compare o SHA256 com o de `SHA256SUMS.txt`
+> na mesma página; o instalador é compilado pelo GitHub Actions a partir deste código.
+
+## Compilar do código-fonte
+
+Precisa de Node, Rust e as ferramentas de build do Visual Studio (MSVC).
 
 ```powershell
-npx tauri build --no-bundle          # compila (sempre com --no-bundle)
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1
+powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1   # instalador em src-tauri\target\release\bundle\nsis
 ```
 
-O script copia o executável para `%LOCALAPPDATA%\Programs\Vitrolinha` e cria atalhos no
-menu Iniciar e na Área de Trabalho. Depois é só abrir "Vitrolinha" pelo menu Iniciar. Para
-abrir junto com o Windows, use "Iniciar com o Windows" no menu da bandeja.
+Esse script também tira do exe os caminhos da sua máquina (usuário do Windows, pasta do Cargo).
+Para uso diário sem o instalador, `npx tauri build --no-bundle` gera só o exe (sempre com
+`--no-bundle`: um `cargo build --release` simples gera um exe que aponta para `localhost:1420`) e
+`scripts\install.ps1` copia esse exe para `%LOCALAPPDATA%\Programs\Vitrolinha` e cria os atalhos.
 
 ## Call do Discord na tela cheia
 

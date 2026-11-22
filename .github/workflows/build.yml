@@ -1,0 +1,90 @@
+name: Build
+
+# Em todo push e pull request: testa e compila o instalador (fica como artefato da execução).
+# Em tag `v*`: depois de compilar, cria um RASCUNHO de release no GitHub com o instalador, um
+# .zip portátil e os SHA256. O rascunho só aparece para o público quando você clica em Publicar.
+#
+# Para lançar:  git tag v0.1.0 && git push origin v0.1.0
+# (a tag precisa bater com "version" em src-tauri/tauri.conf.json)
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Testes do Rust
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Compilar (instalador e exe, sem caminhos da máquina)
+        shell: pwsh
+        run: ./scripts/build-release.ps1
+
+      - name: Empacotar
+        shell: pwsh
+        run: |
+          $ver = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$ver") {
+            throw "A tag $env:GITHUB_REF_NAME não bate com a versão $ver do tauri.conf.json"
+          }
+          $saida = New-Item -ItemType Directory -Force release-files
+          $release = 'src-tauri/target/release'
+          Copy-Item "$release/bundle/nsis/Vitrolinha_${ver}_x64-setup.exe" $saida
+          # Portátil: o exe solto (precisa do WebView2, que já vem no Windows 11 e na maioria dos 10).
+          $porta = New-Item -ItemType Directory -Force "portatil/Vitrolinha"
+          Copy-Item "$release/vitrolinha.exe", LICENSE $porta
+          Compress-Archive -Path $porta.FullName -DestinationPath "$saida/Vitrolinha_${ver}_x64-portatil.zip"
+          $linhas = Get-ChildItem $saida -File | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          }
+          $linhas | Set-Content "$saida/SHA256SUMS.txt"
+          $linhas
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vitrolinha-windows
+          path: release-files/*
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: vitrolinha-windows
+          path: release-files
+
+      - name: Criar rascunho de release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" release-files/* \
+            --draft \
+            --title "Vitrolinha ${GITHUB_REF_NAME#v}" \
+            --notes-file .github/release-notes.md \
+            --generate-notes
