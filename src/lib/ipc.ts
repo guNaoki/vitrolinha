@@ -18,6 +18,15 @@ export const previous = () => invoke<void>("previous");
 /** Pula para `positionMs` (desde o início da faixa). */
 export const seek = (positionMs: number) => invoke<void>("seek", { positionMs });
 
+/** Opções do app (o mesmo menu da bandeja, como dados) e clique numa delas. */
+export type MenuEntry =
+  | { kind: "check"; id: string; label: string; checked: boolean; enabled: boolean }
+  | { kind: "item"; id: string; label: string; enabled: boolean }
+  | { kind: "sub"; id: string; label: string; children: MenuEntry[] }
+  | { kind: "separator" };
+export const getMenu = () => invoke<MenuEntry[]>("get_menu");
+export const menuClick = (id: string) => invoke<void>("menu_click", { id });
+
 /** Minimiza o painel (volta pela barra de tarefas ou pelo ícone da bandeja). */
 export const minimizePanel = () => invoke<void>("minimize_panel");
 
@@ -75,6 +84,17 @@ export type DiskFx = "off" | "soft" | "strong";
 export const getDiskFx = () => invoke<DiskFx>("get_disk_fx");
 export const onDiskFx = (cb: (level: DiskFx) => void): Promise<UnlistenFn> =>
   listen<DiskFx>("disk-fx", (e) => cb(e.payload));
+
+/** Idioma da interface ("pt" | "en", já resolvido); trocar no menu da bandeja recarrega as janelas. */
+export const getLang = () => invoke<"pt" | "en">("get_lang");
+export const onLang = (cb: (lang: string) => void): Promise<UnlistenFn> =>
+  listen<string>("lang", (e) => cb(e.payload));
+
+/** Vinil: rotação do disco (16/33/45) e chiado ("off" | "soft" | "strong"); menu da bandeja. */
+export type Vinyl = { rpm: number; crackle: "off" | "soft" | "medium" | "strong" };
+export const getVinyl = () => invoke<Vinyl>("get_vinyl");
+export const onVinyl = (cb: (v: Vinyl) => void): Promise<UnlistenFn> =>
+  listen<Vinyl>("vinyl", (e) => cb(e.payload));
 
 /** Modo de janela livre (arrastar/redimensionar) ligado? */
 export const isPanelFree = () => invoke<boolean>("panel_is_free");

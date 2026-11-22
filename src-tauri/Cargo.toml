@@ -28,6 +28,9 @@ windows = { version = "0.62", features = [
   "Storage_Streams",
   "Web_Http", # HttpClient do sistema para buscar letras (sem crate HTTP extra)
   "Web_Http_Headers",
+  "Win32_Globalization", # idioma do Windows (i18n.rs)
+  "Win32_System_DataExchange", # área de transferência (cartão para compartilhar)
+  "Win32_System_Memory",
   "Win32_System_Console", # desviar o stderr para o arquivo de log (logfile.rs)
   "Win32_System_SystemInformation", # hora local nas linhas do log
   "Win32_Media_Audio", # volume do sistema (controle de volume do painel)

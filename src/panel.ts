@@ -1,5 +1,6 @@
 import "./lib/dev-mock"; // só em dev no navegador (ver o arquivo)
 import { applyAccent } from "./lib/accent";
+import { initI18n, t } from "./lib/i18n";
 import { armAngle, PANEL_ARM, setArm } from "./lib/arm";
 import { setCover } from "./lib/disc";
 import { initDiskFx } from "./lib/fx";
@@ -17,14 +18,20 @@ import {
   togglePanelSize,
   onPanelVisible,
   previous,
+  seek,
   togglePlayPause,
 } from "./lib/ipc";
 import { LyricsView, type Lyrics } from "./lib/lyrics";
+import { OptionsPanel } from "./lib/options";
 import { Shelf } from "./lib/shelf";
 import { VoiceList } from "./lib/voice";
 import { SeekBar } from "./lib/seek";
+import { shareNowPlaying, shareShelf, type ShareResult } from "./lib/share";
+import { Crackle, initVinyl, type CrackleLevel } from "./lib/vinyl";
 import { VolumeControl } from "./lib/volume";
 import { livePositionMs, type NowPlaying } from "./lib/state";
+
+await initI18n(); // idioma antes de qualquer texto desenhado pelo código
 
 const $ = (id: string) => document.getElementById(id)!;
 const el = {
@@ -46,9 +53,9 @@ const lyricsView = new LyricsView(
 );
 
 const STATUS_LABEL = {
-  playing: "TOCANDO AGORA",
-  paused: "PAUSADO",
-  stopped: "PARADO",
+  playing: t("TOCANDO AGORA"),
+  paused: t("PAUSADO"),
+  stopped: t("PARADO"),
 } as const;
 
 const REF_W = 1280;
@@ -60,6 +67,29 @@ let timer: number | undefined;
 let hiddenByHost = false;
 
 const isActive = () => !document.hidden && !hiddenByHost;
+
+/** Chiado de vinil (opcional): só soa tocando e com a janela visível. */
+const crackle = new Crackle();
+
+/** Pausado por tanto tempo, o disco volta para a capa. */
+const SLEEVE_AFTER_MS = 45_000;
+let pausedSince = 0;
+let sleeveTimer: number | undefined;
+function syncSleeve() {
+  window.clearTimeout(sleeveTimer);
+  const s = current;
+  if (!s || s.status === "playing" || !s.title) {
+    document.body.removeAttribute("data-sleeved");
+    return;
+  }
+  if (!isActive()) return; // janela escondida: sem timers; decide quando voltar a aparecer
+  const left = SLEEVE_AFTER_MS - (Date.now() - pausedSince);
+  if (left <= 0) document.body.setAttribute("data-sleeved", "");
+  else sleeveTimer = window.setTimeout(syncSleeve, left);
+}
+let crackleLevel: CrackleLevel = "off";
+let crackleRpm = 33;
+const syncCrackle = () => crackle.sync(crackleLevel, current?.status === "playing" && isActive(), crackleRpm);
 
 /** Abaixo disso (largura/altura) o layout vira "alto": monitor vertical, quadrado... */
 const TALL_BELOW = 1.2;
@@ -89,19 +119,22 @@ function fit() {
   document.body.dataset.layout = tall ? "tall" : "wide";
 }
 
-/** Linha de duração. Pular: o relógio muda na hora; a fonte confirma (ou recusa) depois. */
+/** Pular: o relógio muda na hora; a fonte confirma (ou recusa) depois. */
+function applySeek(positionMs: number) {
+  if (!current) return;
+  current = { ...current, positionMs, sampledAtMs: Date.now() };
+  renderTime();
+  renderArm(true);
+  syncLyrics();
+}
+
+/** Linha de duração (clicar/arrastar). */
 const seekBar = new SeekBar(
   $("seek"),
   $("seek-bar") as HTMLInputElement,
   $("seek-pos"),
   $("seek-dur"),
-  (positionMs) => {
-    if (!current) return;
-    current = { ...current, positionMs, sampledAtMs: Date.now() };
-    renderTime();
-    renderArm(true);
-    syncLyrics();
-  },
+  applySeek,
 );
 
 function renderTime() {
@@ -131,7 +164,7 @@ try {
 function applyLyricsHidden() {
   document.body.dataset.lyrics = lyricsHidden ? "off" : "on";
   const btn = document.getElementById("btn-lyrics")!;
-  const label = lyricsHidden ? "Mostrar letra" : "Ocultar letra";
+  const label = t(lyricsHidden ? "Mostrar letra" : "Ocultar letra");
   btn.setAttribute("aria-label", label);
   btn.setAttribute("aria-pressed", String(lyricsHidden));
   btn.title = label;
@@ -202,6 +235,13 @@ function render(s: NowPlaying) {
   const trackChanged =
     !prev || prev.title !== s.title || prev.artist !== s.artist || prev.album !== s.album;
   const sweep = trackChanged || prev.status !== s.status;
+  if (!prev || prev.status !== s.status || trackChanged) pausedSince = Date.now();
+  if (trackChanged && prev && isActive()) {
+    // Reinicia a animação de entrada do texto e da capa.
+    document.body.classList.remove("track-in");
+    void document.body.offsetWidth;
+    document.body.classList.add("track-in");
+  }
   if (trackChanged) lyricsView.setLyrics(null); // a da faixa nova chega pelo evento `lyrics`
 
   document.body.dataset.status = s.status;
@@ -210,22 +250,28 @@ function render(s: NowPlaying) {
   el.title.className = titleClass(s.title);
   el.artist.textContent = s.artist;
   el.album.textContent = s.album;
-  el.play.setAttribute("aria-label", s.status === "playing" ? "Pausar" : "Tocar");
+  el.play.setAttribute("aria-label", t(s.status === "playing" ? "Pausar" : "Tocar"));
   // Sem sessão de mídia (parado e sem título) não há o que controlar.
   const hasSession = s.status !== "stopped" || s.title !== "";
   el.prev.disabled = el.play.disabled = el.next.disabled = !hasSession;
+  (document.getElementById("btn-share") as HTMLButtonElement).disabled = !hasSession;
   setCover(el.cover, s.artworkPath);
+  $("jacket-cover").style.backgroundImage = el.cover.style.backgroundImage;
   applyAccent(s.accentColor);
   renderTime();
   renderArm(sweep);
   syncTimer();
   syncLyrics(); // play/pause/seek mudam a posição ou o agendamento
+  syncCrackle();
+  syncSleeve();
 }
 
 /** Janela escondida: sem timer e sem animação (CSS via body[data-hidden]). */
 function syncActive() {
   document.body.toggleAttribute("data-hidden", !isActive());
   syncVolume();
+  syncCrackle();
+  syncSleeve();
   if (!isActive()) {
     stopTimer();
     lyricsView.stop();
@@ -251,7 +297,40 @@ el.next.addEventListener("click", run(next));
 $("btn-min").addEventListener("click", run(minimizePanel));
 $("btn-size").addEventListener("click", run(togglePanelSize));
 const shelf = new Shelf($("shelf"), $("shelf-grid"), $("shelf-count"), $("btn-shelf"));
+
+/** Aviso rápido no pé da janela. */
+let toastTimer: number | undefined;
+function toast(text: string) {
+  const el = $("toast");
+  el.textContent = text;
+  el.hidden = false;
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => (el.hidden = true), 5000);
+}
+/** Cartões: gera a imagem, salva em Imagens\Vitrolinha e copia para a área de transferência. */
+async function makeCard(button: HTMLButtonElement, build: () => Promise<ShareResult>) {
+  button.disabled = true;
+  try {
+    const r = await build();
+    const where = r.path ? "salvo em Imagens\\Vitrolinha" : "não foi possível salvar o arquivo";
+    toast(r.copied ? `Cartão copiado e ${where}.` : `Cartão ${where}.`);
+  } catch (e) {
+    console.warn(e);
+    toast(t("Não foi possível gerar o cartão."));
+  } finally {
+    button.disabled = false;
+  }
+}
+const shareBtn = $("btn-share") as HTMLButtonElement;
+shareBtn.addEventListener("click", () => current && void makeCard(shareBtn, () => shareNowPlaying(current!)));
+const shelfShareBtn = $("shelf-share") as HTMLButtonElement;
+shelfShareBtn.addEventListener("click", () => void makeCard(shelfShareBtn, () => shareShelf(shelf.records)));
 $("btn-shelf").addEventListener("click", () => shelf.toggle());
+
+/** Opções: o menu da bandeja desenhado aqui. Abrir uma fecha a outra (as duas cobrem a janela). */
+const options = new OptionsPanel($("options"), $("options-body"), $("btn-menu"), () => shelf.close());
+$("btn-menu").addEventListener("click", () => options.toggle());
+$("btn-shelf").addEventListener("click", () => options.isOpen() && options.close());
 $("btn-lyrics").addEventListener("click", () => {
   lyricsHidden = !lyricsHidden;
   try {
@@ -277,7 +356,7 @@ function applyFree(free: boolean) {
   document.querySelector(".deck-plate")!.toggleAttribute("data-tauri-drag-region", free);
   fit();
   const size = $("btn-size");
-  const label = free ? "Ocupar o monitor inteiro" : "Diminuir janela";
+  const label = t(free ? "Ocupar o monitor inteiro" : "Diminuir janela");
   size.setAttribute("aria-label", label);
   size.title = label;
 }
@@ -286,6 +365,11 @@ void isPanelFree().then(applyFree);
 
 addEventListener("resize", fit);
 initDiskFx();
+initVinyl((v) => {
+  crackleLevel = v.crackle;
+  crackleRpm = v.rpm;
+  syncCrackle();
+});
 fit();
 syncVolume();
 

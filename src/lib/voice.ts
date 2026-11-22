@@ -1,6 +1,7 @@
 // Lista da call de voz do Discord (só na tela cheia). Os dados vêm do Rust (discord.rs);
 // aqui só desenhamos. Falar/mudo mudam só classes CSS (sem refazer o DOM) para não piscar.
 import type { Voice, VoiceMember } from "./ipc";
+import { t } from "./i18n";
 
 /** Mais que isso vira "+N". */
 const MAX_SHOWN = 8;
@@ -34,7 +35,7 @@ export class VoiceList {
   }
 
   render(v: Voice) {
-    const hint = HINTS[v.status] ?? "";
+    const hint = t(HINTS[v.status] ?? "");
     const inCall = v.status === "connected" && v.channel !== null;
     this.root.hidden = !inCall && hint === "";
     this.hint.textContent = hint;

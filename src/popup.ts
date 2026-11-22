@@ -2,8 +2,12 @@ import { applyAccent } from "./lib/accent";
 import { armAngle, POPUP_ARM, setArm } from "./lib/arm";
 import { setCover } from "./lib/disc";
 import { initDiskFx } from "./lib/fx";
+import { initI18n, t } from "./lib/i18n";
+import { initVinyl } from "./lib/vinyl";
 import { getState, next, onNowPlaying, onPopupLeave, onPopupVisible, previous, togglePlayPause } from "./lib/ipc";
 import { formatTime, livePositionMs, type NowPlaying } from "./lib/state";
+
+await initI18n(); // idioma antes de qualquer texto desenhado pelo código
 
 const $ = (id: string) => document.getElementById(id)!;
 const el = {
@@ -65,7 +69,7 @@ function render(s: NowPlaying) {
   document.body.dataset.status = s.status;
   el.title.textContent = s.title || "—";
   el.artist.textContent = s.artist;
-  el.play.setAttribute("aria-label", s.status === "playing" ? "Pausar" : "Tocar");
+  el.play.setAttribute("aria-label", t(s.status === "playing" ? "Pausar" : "Tocar"));
   setCover(el.cover, s.artworkPath);
   applyAccent(s.accentColor);
   renderProgress();
@@ -91,6 +95,7 @@ function setVisible(v: boolean) {
 }
 
 initDiskFx();
+initVinyl(); // rotação 33/45 (o chiado é só do painel)
 void onNowPlaying(render);
 void onPopupVisible(setVisible);
 void onPopupLeave(() => {

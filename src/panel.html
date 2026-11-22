@@ -79,6 +79,12 @@
           <circle r="7" fill="#2a251e" />
         </svg>
       </div>
+
+      <!-- Capa (luva): depois de um tempo pausado, o disco guarda na capa (data-sleeved no body) -->
+      <div class="jacket" id="jacket" aria-hidden="true">
+        <i class="jacket-vinyl"></i>
+        <div class="jacket-cover" id="jacket-cover"></div>
+      </div>
       </div><!-- /turntable -->
 
       <!-- Letra sincronizada (só aparece quando há letra) -->
@@ -129,11 +135,29 @@
     </aside>
     <!-- Estante: os últimos discos ouvidos (aberta pelo botão da barra de cima) -->
     <section class="shelf" id="shelf" hidden aria-label="Estante de discos">
-      <header class="shelf-head"><h2>Estante</h2><span id="shelf-count"></span></header>
+      <header class="shelf-head">
+        <h2>Estante</h2><span id="shelf-count"></span>
+        <button type="button" id="shelf-share" title="Salva e copia uma imagem com os discos mais ouvidos">Gerar cartão</button>
+      </header>
       <ul class="shelf-grid" id="shelf-grid"></ul>
     </section>
+    <!-- Opções: o menu da bandeja, com a cara do app (aberta pelo botão de menu da barra de cima) -->
+    <aside class="options" id="options" hidden aria-label="Opções">
+      <div class="options-sheet">
+      <header class="options-head">
+        <h2>Opções</h2>
+        <button type="button" id="options-close" aria-label="Fechar" title="Fechar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+      <div id="options-body"></div>
+      </div>
+    </aside>
     <!-- Barra de cima (fora do palco: fica no topo da janela, em qualquer escala) -->
     <div class="chrome" id="chrome">
+      <button type="button" id="btn-menu" aria-label="Opções" title="Opções (as mesmas do ícone da bandeja)" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" /></svg>
+      </button>
       <button type="button" id="btn-min" aria-label="Minimizar painel" title="Minimizar painel">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" /></svg>
       </button>
@@ -146,6 +170,9 @@
           <path d="M5 8h14M5 12h14M5 16h9" />
           <path class="slash" d="M4 20L20 4" />
         </svg>
+      </button>
+      <button type="button" id="btn-share" aria-label="Gerar cartão para compartilhar" title="Gerar cartão para compartilhar (salva em Imagens e copia)" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" /><circle cx="9" cy="10" r="1.6" /><path d="M4.5 17l4.5-4 3.5 3 3-2.5 4 3.5" /></svg>
       </button>
       <button type="button" id="btn-size" aria-label="Diminuir janela" title="Diminuir janela">
         <!-- ocupando o monitor: ícone "restaurar" (dois quadrados); janela livre: "ampliar" (um quadrado) -->
@@ -167,6 +194,8 @@
         <input type="range" id="vol" min="0" max="100" step="1" value="50" aria-label="Volume" />
       </div>
     </div>
+    <!-- Aviso rápido (ex.: cartão salvo) -->
+    <div class="toast" id="toast" role="status" hidden></div>
     <script type="module" src="./panel.ts"></script>
   </body>
 </html>

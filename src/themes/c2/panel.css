@@ -45,6 +45,73 @@ body {
   opacity: 0.2;
 }
 
+/* ---------- Disco guardado na capa (pausado por um tempo) ---------- */
+/* O disco e o braço somem; a capa fica em pé no lugar, com a ponta do disco aparecendo. */
+.disc,
+.disc-shadow,
+.arm,
+.platter {
+  transition: opacity 0.9s ease;
+}
+.jacket {
+  position: absolute;
+  left: 90px;
+  top: 80px;
+  width: 560px;
+  height: 560px;
+  opacity: 0;
+  transform: translateX(-24px) scale(0.95);
+  transition:
+    opacity 0.9s ease,
+    transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+.jacket-vinyl {
+  position: absolute;
+  left: 150px;
+  top: 14px;
+  width: 532px;
+  height: 532px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--label) 0 15%, #14100b 15.5% 19%, transparent 19.5%),
+    repeating-radial-gradient(circle, #1a1510 0 1px, #2c251b 1px 2px);
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(239, 226, 195, 0.2);
+}
+.jacket-cover {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: var(--label) center / cover no-repeat;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(239, 226, 195, 0.12);
+}
+body[data-sleeved] .jacket {
+  opacity: 1;
+  transform: none;
+}
+body[data-sleeved] .disc,
+body[data-sleeved] .disc-shadow,
+body[data-sleeved] .arm,
+body[data-sleeved] .platter {
+  opacity: 0;
+}
+body[data-hidden] .jacket {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .jacket,
+  .disc,
+  .disc-shadow,
+  .arm,
+  .platter {
+    transition: none;
+  }
+}
+
 /* ---------- Texto ---------- */
 /* Bloco no canto inferior direito, ancorado embaixo e crescendo para cima.
    A borda esquerda (x=1010) deixa folga do braço na posição inicial (a mais à
@@ -934,4 +1001,455 @@ body[data-layout="tall"] .controls button.primary {
 body[data-layout="tall"] .controls svg {
   width: 40px;
   height: 40px;
+}
+
+/* ---------- Aviso rápido ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 12;
+  max-width: min(80vw, 560px);
+  padding: 10px 16px;
+  transform: translateX(-50%);
+  border-radius: 6px;
+  background: rgba(13, 10, 7, 0.9);
+  border: 1px solid rgba(239, 226, 195, 0.25);
+  color: var(--cream);
+  font: 12px/1.5 var(--font-caps);
+  letter-spacing: 0.06em;
+  text-align: center;
+  pointer-events: none;
+}
+.toast[hidden] {
+  display: none;
+}
+.shelf-head button {
+  padding: 8px 14px;
+  border: 1px solid rgba(239, 226, 195, 0.25);
+  border-radius: 999px;
+  background: rgba(13, 10, 7, 0.55);
+  color: var(--cream);
+  font: 11px/1 var(--font-caps);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.shelf-head button:hover,
+.shelf-head button:focus-visible {
+  border-color: var(--amber);
+}
+.shelf-head button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+#shelf-share {
+  margin-left: auto;
+}
+
+/* ---------- Transições entre interações ---------- */
+/* Botões: borda, fundo e leve "afundar" ao clicar, em vez de trocar de repente. */
+.controls button,
+.chrome button,
+.shelf-head button {
+  transition:
+    opacity 0.2s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.15s ease;
+}
+.chrome button:active,
+.shelf-head button:active {
+  transform: scale(0.94);
+}
+/* Bolinha da linha de duração cresce ao passar o mouse. */
+.seek input[type="range"]::-webkit-slider-thumb,
+.chrome .volume input[type="range"]::-webkit-slider-thumb {
+  transition: transform 0.15s ease;
+}
+.seek input[type="range"]:not(:disabled):hover::-webkit-slider-thumb,
+.chrome .volume input[type="range"]:hover::-webkit-slider-thumb {
+  transform: scale(1.3);
+}
+/* Estante: aparece subindo de leve e some esmaecendo (o JS troca `hidden` depois do fim). */
+.shelf {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.shelf.show {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* Troca de faixa: título, artista e capa entram suavemente. */
+  @keyframes info-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes cover-in {
+    from {
+      opacity: 0.15;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  body.track-in .info > :not(.seek) {
+    animation: info-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  body.track-in .info > :nth-child(3) {
+    animation-delay: 0.05s;
+  }
+  body.track-in .info > :nth-child(4) {
+    animation-delay: 0.1s;
+  }
+  body.track-in .cover {
+    animation: cover-in 0.6s ease both;
+  }
+  /* Aviso rápido: entra subindo. */
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+  }
+  .toast:not([hidden]) {
+    animation: toast-in 0.25s ease both;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shelf {
+    transition: none;
+  }
+}
+
+/* ---------- Opções (o menu da bandeja, com a cara do app) ---------- */
+/* Fundo escurecido sobre a janela; a folha de opções fica colada na direita e entra deslizando. */
+.options {
+  position: fixed;
+  inset: var(--bezel, 0px);
+  z-index: 9;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: rgba(5, 3, 2, 0.45);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(239, 226, 195, 0.25) transparent;
+}
+.options[hidden] {
+  display: none;
+}
+.options.show {
+  opacity: 1;
+}
+.options-sheet {
+  box-sizing: border-box;
+  width: min(430px, 100%);
+  min-height: 100%;
+  margin-left: auto;
+  padding: 84px 28px 40px;
+  background: #0d0a07;
+  border-left: 1px solid rgba(239, 226, 195, 0.12);
+  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.55);
+  transform: translateX(28px);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.options.show .options-sheet {
+  transform: none;
+}
+.options-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20px;
+}
+.options-head h2 {
+  margin: 0;
+  font: 13px/1 var(--font-caps);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.options-head button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(239, 226, 195, 0.25);
+  border-radius: 50%;
+  background: rgba(13, 10, 7, 0.55);
+  color: var(--cream);
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    transform 0.15s ease;
+}
+.options-head button:hover,
+.options-head button:focus-visible {
+  border-color: var(--amber);
+}
+.options-head button:active {
+  transform: scale(0.94);
+}
+.options-head svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+/* Seção: título clicável (com o valor atual ao lado) e conteúdo que abre e fecha com transição. */
+.opt-section {
+  border-top: 1px solid rgba(239, 226, 195, 0.1);
+}
+.opt-section:last-child {
+  border-bottom: 1px solid rgba(239, 226, 195, 0.1);
+}
+.opt-head {
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: none;
+  color: var(--cream);
+  text-align: left;
+  cursor: pointer;
+}
+.opt-head-title {
+  flex: none;
+  font: 12px/1.3 var(--font-caps);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cream);
+  transition: color 0.18s ease;
+}
+.opt-head-sum {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  font: 14px/1.3 var(--font-body);
+  font-style: italic;
+  color: var(--cream-dim);
+  transition: opacity 0.2s ease;
+}
+.opt-section[data-open] .opt-head-sum {
+  opacity: 0; /* aberta, o valor já está à vista dentro */
+}
+.opt-head:hover .opt-head-title,
+.opt-section[data-open] .opt-head-title {
+  color: var(--amber);
+}
+.opt-head:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 2px;
+}
+.opt-chevron {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin: 0 4px 3px 2px;
+  border-right: 2px solid var(--cream-dim);
+  border-bottom: 2px solid var(--cream-dim);
+  transform: rotate(45deg);
+  transition: transform 0.25s ease;
+}
+.opt-section[data-open] .opt-chevron {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+.opt-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.opt-section[data-open] .opt-body {
+  grid-template-rows: 1fr;
+}
+.opt-body-inner {
+  min-height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  transition: visibility 0.3s;
+}
+.opt-section[data-open] .opt-body-inner {
+  visibility: visible;
+  padding-bottom: 6px;
+}
+.opt-group {
+  margin: 4px 0 18px;
+}
+.opt-group .opt-group {
+  margin: 14px 0 6px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(239, 226, 195, 0.12);
+}
+.opt-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0 0 10px;
+}
+.opt-title h3 {
+  margin: 0;
+  font: 15px/1.3 var(--font-body);
+  font-weight: 400;
+  color: var(--cream);
+}
+.opt-hint {
+  display: block;
+  font: 13px/1.35 var(--font-body);
+  font-style: italic;
+  color: var(--cream-dim);
+}
+.opt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 7px 13px;
+  border: 1px solid rgba(239, 226, 195, 0.25);
+  border-radius: 999px;
+  background: rgba(239, 226, 195, 0.04);
+  color: var(--cream);
+  font: 15px/1.2 var(--font-body);
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.15s ease;
+}
+.chip:hover:not(:disabled),
+.chip:focus-visible {
+  border-color: var(--amber);
+}
+.chip:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.chip[aria-pressed="true"] {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: var(--bg);
+}
+.chip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+/* Ligar/desligar: rótulo (com a explicação embaixo) à esquerda e um interruptor à direita. */
+.opt-toggles {
+  margin: 0 0 14px;
+}
+.opt-toggle {
+  width: 100%;
+  padding: 11px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 0;
+  border-bottom: 1px solid rgba(239, 226, 195, 0.07);
+  background: none;
+  color: var(--cream);
+  font: 16px/1.3 var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.opt-toggle:last-child {
+  border-bottom: 0;
+}
+.opt-words {
+  min-width: 0;
+}
+.opt-toggle:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.opt-toggle:focus-visible,
+.opt-action:focus-visible,
+.chip:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 2px;
+}
+.opt-switch {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(239, 226, 195, 0.18);
+  transition: background-color 0.2s ease;
+}
+.opt-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.opt-toggle[aria-checked="true"] .opt-switch {
+  background: var(--amber);
+}
+.opt-toggle[aria-checked="true"] .opt-switch::after {
+  transform: translateX(16px);
+  background: var(--bg);
+}
+.opt-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.opt-action {
+  padding: 9px 0;
+  border: 0;
+  background: none;
+  color: var(--cream-dim);
+  font: 16px/1.3 var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+.opt-action:hover:not(:disabled) {
+  color: var(--amber);
+}
+body[data-hidden] .options {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .options,
+  .options-sheet,
+  .opt-body,
+  .opt-chevron {
+    transition: none;
+  }
 }

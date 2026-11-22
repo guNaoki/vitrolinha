@@ -91,6 +91,55 @@ pub fn set_disk_fx(app: &AppHandle, level: &str) {
     set(app, "diskFx", json!(level));
 }
 
+/// Rotação do disco: 16 (⅔, discos antigos), 33 (padrão) ou 45 rpm. Muda o giro na tela e o
+/// compasso do "tec" do som de disco antigo.
+pub const VINYL_RPMS: [u32; 3] = [16, 33, 45];
+pub fn vinyl_rpm(app: &AppHandle) -> u32 {
+    get::<u32>(app, "vinylRpm").filter(|v| VINYL_RPMS.contains(v)).unwrap_or(33)
+}
+pub fn set_vinyl_rpm(app: &AppHandle, rpm: u32) {
+    set(app, "vinylRpm", json!(rpm));
+}
+
+/// Som de disco antigo sobre a música (só com o painel aberto): "off" (padrão) | "soft" | "medium" | "strong".
+pub const CRACKLE_LEVELS: [&str; 4] = ["off", "soft", "medium", "strong"];
+pub fn crackle(app: &AppHandle) -> String {
+    get::<String>(app, "crackle")
+        .filter(|v| CRACKLE_LEVELS.contains(&v.as_str()))
+        .unwrap_or_else(|| "off".into())
+}
+pub fn set_crackle(app: &AppHandle, level: &str) {
+    set(app, "crackle", json!(level));
+}
+
+/// O que o front precisa saber do "vinil" (evento `vinyl` e comando `get_vinyl`).
+#[derive(Clone, Serialize)]
+pub struct Vinyl {
+    pub rpm: u32,
+    pub crackle: String,
+}
+pub fn vinyl(app: &AppHandle) -> Vinyl {
+    Vinyl { rpm: vinyl_rpm(app), crackle: crackle(app) }
+}
+
+/// Overlay para OBS em http://localhost:7421 (padrão: não).
+pub fn overlay_enabled(app: &AppHandle) -> bool {
+    get(app, "overlayEnabled").unwrap_or(false)
+}
+pub fn set_overlay_enabled(app: &AppHandle, on: bool) {
+    set(app, "overlayEnabled", json!(on));
+}
+
+/// Idioma da interface: "auto" (o do Windows, padrão) | "pt" | "en".
+pub fn language(app: &AppHandle) -> String {
+    get::<String>(app, "language")
+        .filter(|v| ["auto", "pt", "en"].contains(&v.as_str()))
+        .unwrap_or_else(|| "auto".into())
+}
+pub fn set_language(app: &AppHandle, choice: &str) {
+    set(app, "language", json!(choice));
+}
+
 /// Busca a capa em alta resolução no iTunes quando a do player é pequena (padrão: sim).
 pub fn hd_cover(app: &AppHandle) -> bool {
     get(app, "hdCover").unwrap_or(true)
@@ -170,6 +219,13 @@ pub fn discord_enabled(app: &AppHandle) -> bool {
 }
 pub fn set_discord_enabled(app: &AppHandle, on: bool) {
     discord_set(app, "enabled", json!(on));
+}
+/// "Ouvindo agora" no perfil do Discord (padrão: não). Precisa do mesmo Client ID da call.
+pub fn discord_presence(app: &AppHandle) -> bool {
+    discord_get(app, "presence", "discordPresence").unwrap_or(false)
+}
+pub fn set_discord_presence(app: &AppHandle, on: bool) {
+    discord_set(app, "presence", json!(on));
 }
 /// Client ID do app do Discord que acompanha o programa (cliente público, sem secret: o
 /// Client ID não é segredo). Vazio até o app público ser criado no Developer Portal; enquanto

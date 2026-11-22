@@ -2,19 +2,23 @@
 // Só desenha quando abre; fechada não existe no DOM (nada decodificado, nada rodando).
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { getHistory, type ShelfRecord } from "./ipc";
+import { t } from "./i18n";
 
 /** "há 5 min", "ontem"... (hora local do usuário). */
 export function formatAgo(lastMs: number, nowMs = Date.now()): string {
   const min = Math.max(0, Math.round((nowMs - lastMs) / 60_000));
-  if (min < 2) return "agora há pouco";
-  if (min < 60) return `há ${min} min`;
+  if (min < 2) return t("agora há pouco");
+  if (min < 60) return t("há {n} min", { n: min });
   const h = Math.round(min / 60);
-  if (h < 24) return `há ${h} h`;
+  if (h < 24) return t("há {n} h", { n: h });
   const d = Math.round(h / 24);
-  return d === 1 ? "ontem" : `há ${d} dias`;
+  return d === 1 ? t("ontem") : t("há {n} dias", { n: d });
 }
 
 export class Shelf {
+  /** Discos mostrados agora (o cartão da estante usa esta lista). */
+  records: ShelfRecord[] = [];
+
   constructor(
     private readonly root: HTMLElement,
     private readonly grid: HTMLElement,
@@ -27,7 +31,7 @@ export class Shelf {
   }
 
   isOpen(): boolean {
-    return !this.root.hidden;
+    return this.root.classList.contains("show");
   }
 
   toggle() {
@@ -39,25 +43,33 @@ export class Shelf {
     const records = await getHistory().catch(() => [] as ShelfRecord[]);
     this.render(records);
     this.root.hidden = false;
+    void this.root.offsetWidth; // fixa o estado inicial para a transição rodar
+    this.root.classList.add("show");
     this.button.setAttribute("aria-pressed", "true");
     document.body.dataset.shelf = "open";
   }
 
   close() {
-    this.root.hidden = true;
-    this.grid.replaceChildren(); // solta as imagens
+    this.root.classList.remove("show");
+    // Depois do esmaecer: esconde e solta as imagens (se não reabriu nesse meio-tempo).
+    window.setTimeout(() => {
+      if (this.root.classList.contains("show")) return;
+      this.root.hidden = true;
+      this.grid.replaceChildren();
+    }, 320);
     this.button.setAttribute("aria-pressed", "false");
     delete document.body.dataset.shelf;
   }
 
   private render(records: ShelfRecord[]) {
+    this.records = records;
     this.count.textContent =
-      records.length === 0 ? "" : records.length === 1 ? "1 disco" : `${records.length} discos`;
+      records.length === 0 ? "" : records.length === 1 ? t("1 disco") : t("{n} discos", { n: records.length });
     const items = records.map((r) => this.item(r));
     if (items.length === 0) {
       const empty = document.createElement("li");
       empty.className = "shelf-empty";
-      empty.textContent = "Ainda não há discos. Toque uma música e ela aparece aqui.";
+      empty.textContent = t("Ainda não há discos. Toque uma música e ela aparece aqui.");
       items.push(empty);
     }
     this.grid.replaceChildren(...items);

@@ -14,6 +14,11 @@ mod popup;
 mod settings;
 mod shortcuts;
 mod tray;
+mod i18n;
+mod overlay;
+mod presence;
+mod share;
+mod sleep;
 mod volume;
 mod windows;
 
@@ -102,6 +107,30 @@ fn get_disk_fx(app: tauri::AppHandle) -> String {
     settings::disk_fx(&app)
 }
 
+/// Opções (as mesmas do menu da bandeja) para a tela de opções do painel.
+#[tauri::command]
+fn get_menu(app: tauri::AppHandle) -> Vec<tray::Entry> {
+    tray::model(&app)
+}
+
+/// Clique numa opção da tela de opções (mesmo efeito do clique no menu da bandeja).
+#[tauri::command]
+fn menu_click(app: tauri::AppHandle, id: String) {
+    tray::click(&app, &id);
+}
+
+/// Idioma da interface ("pt" | "en"); mudanças chegam pelo evento `lang` (as janelas recarregam).
+#[tauri::command]
+fn get_lang(app: tauri::AppHandle) -> &'static str {
+    i18n::lang(&app).code()
+}
+
+/// Rotação do disco e chiado de vinil; mudanças chegam pelo evento `vinyl`.
+#[tauri::command]
+fn get_vinyl(app: tauri::AppHandle) -> settings::Vinyl {
+    settings::vinyl(&app)
+}
+
 /// Botão "diminuir/ampliar": alterna entre ocupar o monitor inteiro e a janela livre.
 #[tauri::command]
 fn toggle_panel_size(app: tauri::AppHandle) {
@@ -125,6 +154,9 @@ fn main() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(SharedState::default())
+        .manage(sleep::SleepState::default())
+        .manage(presence::PresenceState::default())
+        .manage(overlay::OverlayState::default())
         .manage(lyrics::LyricsState::default())
         .manage(hdcover::HdState::default())
         .manage(history::HistoryState::default())
@@ -140,6 +172,13 @@ fn main() {
             minimize_panel,
             toggle_panel_size,
             get_disk_fx,
+            get_vinyl,
+            get_lang,
+            get_menu,
+            menu_click,
+            share::read_cover,
+            share::save_share_image,
+            share::copy_share_image,
             get_history,
             get_volume,
             set_volume,
@@ -172,6 +211,7 @@ fn main() {
             shortcuts::apply(handle);
             media::start(handle.clone());
             discord::reload(handle);
+            overlay::reload(handle); // overlay para OBS, se ligado
             Ok(())
         })
         .run(tauri::generate_context!())

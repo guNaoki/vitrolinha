@@ -1,5 +1,7 @@
 # Vitrolinha
 
+**Português** · [English](README.en.md)
+
 A vitrola da sua tela: flyout de música para Windows com cara de toca-discos vintage. Mostra o que está
 tocando (qualquer app que apareça nos controles de mídia do Windows) num **popup** ao
 trocar de faixa e num **painel** para o segundo monitor.
@@ -10,13 +12,22 @@ Tauri 2 (Rust) + TypeScript/CSS puro + Vite.
 
 - Popup ao trocar de faixa, com anterior · tocar/pausar · próxima
 - Painel em tela cheia no monitor escolhido ou janela livre (moldura de mini toca-discos)
+- **Linha de duração**: acompanha a faixa e, se o player deixa, pula para onde você clicar. Também dá
+  para **segurar o braço da agulha e soltar em outro ponto do disco**
 - Cor de destaque tirada da capa, capa em alta resolução (iTunes Search, opcional)
 - Letras sincronizadas (lrclib.net, opcional) com a linha atual acesa
-- Efeitos do disco (brilho/poeira que giram, tremor do braço), em 3 níveis
+- Efeitos do disco (brilho/poeira que giram, tremor do braço), em 3 níveis; rotação em **16, 33 ou 45 rpm**
+- **Som de disco antigo** opcional por cima da música: chiado de superfície, estalinhos, arranhões e o "tec" de uma risca a cada volta do disco, em 3 níveis (gerado na hora, só com o painel aberto)
+- Pausado há um tempo, o **disco volta para a capa**
+- **Cartão para compartilhar**: uma imagem com a vitrola e a faixa atual (ou os discos mais ouvidos da
+  estante), salva em Imagens\Vitrolinha e já copiada para colar no chat
 - Estante com os últimos discos que você ouviu (histórico só neste computador)
+- **Timer para dormir**: pausa a música depois de 15 a 90 minutos
 - Quem está na call de voz do Discord, na tela cheia (opcional, precisa de configuração)
-- Volume do sistema, filtro de fonte de mídia (ex.: só YouTube Music), atalhos globais
-- Menu na bandeja com todas as configurações
+- **"Ouvindo agora" no perfil do Discord** (opcional) e **overlay para OBS** (opcional)
+- Volume do sistema (pequeno, na barra de cima), filtro de fonte de mídia (ex.: só YouTube Music), atalhos globais
+- Interface em **português e inglês** (segue o idioma do Windows ou escolha no menu)
+- Opções organizadas por função, na tela de opções do painel (botão de três linhas) e no menu da bandeja
 
 ## Instalar
 
@@ -53,6 +64,19 @@ Para uso diário sem o instalador, `npx tauri build --no-bundle` gera só o exe 
 `--no-bundle`: um `cargo build --release` simples gera um exe que aponta para `localhost:1420`) e
 `scripts\install.ps1` copia esse exe para `%LOCALAPPDATA%\Programs\Vitrolinha` e cria os atalhos.
 
+## Overlay para OBS
+
+Ligue **Overlay para OBS** no menu da bandeja e, no OBS, adicione uma fonte **Navegador** com o endereço
+`http://localhost:7421` (tamanho sugerido 520 × 170; o fundo é transparente). Mostra o disco girando, com
+título, artista e progresso, e some sozinho quando nada toca. O servidor atende só neste computador
+(127.0.0.1) e só responde a `localhost`.
+
+## "Ouvindo agora" no Discord
+
+Com **Mostrar no Discord o que estou ouvindo** ligado, o seu perfil do Discord mostra o título e o artista
+da faixa, com a barra de progresso. Precisa do mesmo Client ID da lista da call (veja abaixo). Vem
+desligado, e só funciona com o app do Discord aberto.
+
 ## Call do Discord na tela cheia
 
 Mostra no canto de cima à esquerda do painel (só no modo "ocupar o monitor inteiro") quem
@@ -86,7 +110,7 @@ que não são a dona dele (ou **App Testers**). Para conferir, monte o pacote co
 
 ```powershell
 npm install
-npm run dev            # só o front-end, no navegador (sem o Rust)
+npm run dev            # só o front-end, no navegador (sem o Rust; os comandos do Tauri são simulados)
 cd src-tauri; cargo test
 ```
 
@@ -104,9 +128,11 @@ Não é afiliada ao Discord, à Apple (iTunes) nem ao lrclib.
 Nada sai do computador por padrão, exceto, se ligados no menu da bandeja: busca de letras
 (artista, título, álbum e duração → lrclib.net) e de capa grande (artista e título →
 itunes.apple.com). A estante fica em `%APPDATA%\app.vitrolinha\shelf` e pode ser
-desligada e apagada pelo menu. O log de diagnóstico fica só neste computador.
+desligada e apagada pelo menu. O log de diagnóstico fica só neste computador. Os cartões de compartilhar são feitos e salvos aqui,
+e só vão para onde você os colar.
 
 A call do Discord (desligada por padrão) conversa só com o app do Discord no próprio
 computador. Na rede: a troca do código de autorização por token (discord.com) e as fotos de
 perfil, que o painel carrega do CDN do Discord. O client secret e o token ficam em texto no
-`discord.json`, na pasta de dados do app.
+`discord.json`, na pasta de dados do app. "Ouvindo agora" (desligado por padrão) envia o título e o artista para o seu próprio app do Discord, que os
+mostra no perfil. O overlay para OBS (desligado por padrão) só responde neste computador.

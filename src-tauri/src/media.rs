@@ -65,7 +65,7 @@ impl NowPlaying {
     }
 
     /// Posição estimada em `at_ms`, como o front faz.
-    fn position_at(&self, at_ms: i64) -> i64 {
+    pub fn position_at(&self, at_ms: i64) -> i64 {
         let elapsed = if self.status == "playing" { (at_ms - self.sampled_at_ms).max(0) } else { 0 };
         let pos = self.position_ms + elapsed;
         if self.duration_ms > 0 { pos.min(self.duration_ms) } else { pos }
@@ -112,11 +112,20 @@ pub struct SharedState {
 fn pick_session(manager: &SessionManager, source: Option<&str>) -> Result<Session> {
     let Some(id) = source else { return manager.GetCurrentSession() };
     for session in manager.GetSessions()? {
-        if session.SourceAppUserModelId()?.to_string_lossy() == id {
+        if source_matches(id, &session.SourceAppUserModelId()?.to_string_lossy()) {
             return Ok(session);
         }
     }
     Err(windows::core::Error::new(windows::core::HRESULT(0x8000_4005_u32 as i32), "app de mídia escolhido não está aberto"))
+}
+
+/// A fonte escolhida vale para essa sessão? `~trecho` casa com qualquer app cujo identificador
+/// contenha o trecho (Spotify tem identificadores diferentes na loja e fora dela); senão, igualdade.
+pub fn source_matches(chosen: &str, aumid: &str) -> bool {
+    match chosen.strip_prefix('~') {
+        Some(part) => aumid.to_lowercase().contains(&part.to_lowercase()),
+        None => chosen == aumid,
+    }
 }
 
 /// Uma fonte de mídia (app) com sessão ativa agora.
@@ -177,6 +186,7 @@ pub fn friendly_name(aumid: &str) -> String {
 #[derive(Clone, Copy, Debug)]
 pub enum Control {
     TogglePlayPause,
+    Pause,
     Next,
     Previous,
 }
@@ -192,6 +202,7 @@ pub fn control(state: &SharedState, what: Control) -> std::result::Result<(), St
         let result = unsafe { RoInitialize(RO_INIT_MULTITHREADED) }
             .and_then(|_| match what {
                 Control::TogglePlayPause => session.TryTogglePlayPauseAsync(),
+                Control::Pause => session.TryPauseAsync(),
                 Control::Next => session.TrySkipNextAsync(),
                 Control::Previous => session.TrySkipPreviousAsync(),
             }?
@@ -203,6 +214,17 @@ pub fn control(state: &SharedState, what: Control) -> std::result::Result<(), St
         }
     });
     Ok(())
+}
+
+/// Pausa se estiver tocando (timer para dormir). Nunca "alterna": não pode ligar a música.
+pub fn pause_if_playing(app: &AppHandle) {
+    let state = app.state::<SharedState>();
+    let playing = state.now.lock().unwrap().as_ref().is_some_and(|n| n.status == "playing");
+    if playing {
+        if let Err(e) = control(&state, Control::Pause) {
+            eprintln!("[sleep] não foi possível pausar: {e}");
+        }
+    }
 }
 
 /// Pula para `position_ms` (a partir do início da faixa) na fonte atual.
@@ -240,7 +262,7 @@ pub fn seek(app: &AppHandle, position_ms: i64) -> std::result::Result<(), String
     Ok(())
 }
 
-fn now_ms() -> i64 {
+pub fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
 
@@ -377,6 +399,7 @@ fn publish(app: &AppHandle, np: NowPlaying) {
     *app.state::<SharedState>().now.lock().unwrap() = Some(np.clone());
     crate::history::observe(app, &np); // estante: conta a faixa e guarda a capa
     emit(app, &np);
+    crate::presence::update(app); // "ouvindo agora" no Discord (se ligado)
 }
 
 fn emit(app: &AppHandle, np: &NowPlaying) {
@@ -493,7 +516,16 @@ fn run(app: &AppHandle) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::friendly_name;
+    use super::{friendly_name, source_matches};
+
+    #[test]
+    fn source_by_part_matches_any_install() {
+        assert!(source_matches("~spotify", "Spotify.exe"));
+        assert!(source_matches("~spotify", "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"));
+        assert!(!source_matches("~spotify", "music.youtube.com-5929F88E_vezhnr0wkvrcy!App"));
+        assert!(source_matches("Spotify.exe", "Spotify.exe"));
+        assert!(!source_matches("Spotify.exe", "spotify.exe"));
+    }
 
     #[test]
     fn names_known_apps() {

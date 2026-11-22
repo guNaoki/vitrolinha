@@ -73,7 +73,7 @@ body[data-state="out"] .card {
   border-radius: 50%;
   background: repeating-radial-gradient(circle, #0d0b08 0 1px, #1c1711 1px 2px);
   will-change: transform;
-  animation: spin 1.8s linear infinite; /* 33⅓ rpm */
+  animation: spin var(--spin, 1.8s) linear infinite; /* 33⅓ rpm */
   animation-play-state: paused;
 }
 body[data-status="playing"]:not([data-hidden]) .disc-spin {
@@ -251,7 +251,7 @@ body[data-fx="strong"] {
 }
 body[data-fx="soft"][data-status="playing"]:not([data-hidden]) .arm-art,
 body[data-fx="strong"][data-status="playing"]:not([data-hidden]) .arm-art {
-  animation: arm-wobble 1.8s ease-in-out infinite;
+  animation: arm-wobble var(--spin, 1.8s) ease-in-out infinite;
 }
 .arm.lifted .arm-rot {
   transform: rotate(var(--arm)) scale(1.03);

@@ -34,11 +34,11 @@ use windows::Win32::System::WinRT::{RoInitialize, RO_INIT_MULTITHREADED};
 
 use crate::settings::{self, DiscordToken};
 
-const OP_HANDSHAKE: u32 = 0;
-const OP_FRAME: u32 = 1;
+pub(crate) const OP_HANDSHAKE: u32 = 0;
+pub(crate) const OP_FRAME: u32 = 1;
 const OP_CLOSE: u32 = 2;
-const OP_PING: u32 = 3;
-const OP_PONG: u32 = 4;
+pub(crate) const OP_PING: u32 = 3;
+pub(crate) const OP_PONG: u32 = 4;
 /// Teto de um quadro (um canal grande cabe folgado).
 const MAX_FRAME: usize = 8 * 1024 * 1024;
 
@@ -195,7 +195,7 @@ fn supervise(app: AppHandle, generation: u64) {
 
 /// Abre o primeiro pipe do Discord que responder (discord-ipc-0…9: 0 é o Discord comum,
 /// os seguintes valem quando há mais de uma instância, como Canary/PTB).
-fn connect() -> Option<File> {
+pub(crate) fn connect() -> Option<File> {
     (0..10).find_map(|i| {
         OpenOptions::new().read(true).write(true).open(format!(r"\\.\pipe\discord-ipc-{i}")).ok()
     })
@@ -203,7 +203,7 @@ fn connect() -> Option<File> {
 
 // ---------------------------------------------------------------- quadros
 
-fn write_frame(pipe: &mut File, op: u32, payload: &Value) -> Result<(), String> {
+pub(crate) fn write_frame(pipe: &mut File, op: u32, payload: &Value) -> Result<(), String> {
     let body = serde_json::to_vec(payload).map_err(|e| e.to_string())?;
     let mut buf = Vec::with_capacity(8 + body.len());
     buf.extend_from_slice(&op.to_le_bytes());
@@ -212,7 +212,7 @@ fn write_frame(pipe: &mut File, op: u32, payload: &Value) -> Result<(), String> 
     pipe.write_all(&buf).map_err(|e| format!("escrita no pipe: {e}"))
 }
 
-fn read_frame(pipe: &mut File) -> Result<(u32, Value), String> {
+pub(crate) fn read_frame(pipe: &mut File) -> Result<(u32, Value), String> {
     let mut head = [0u8; 8];
     pipe.read_exact(&mut head).map_err(|e| format!("leitura do pipe: {e}"))?;
     let op = u32::from_le_bytes(head[0..4].try_into().unwrap());

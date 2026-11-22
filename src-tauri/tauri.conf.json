@@ -22,7 +22,8 @@
         "decorations": false,
         "transparent": true,
         "shadow": false,
-        "resizable": false
+        "resizable": false,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required"
       },
       {
         "label": "popup",

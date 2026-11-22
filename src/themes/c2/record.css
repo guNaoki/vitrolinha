@@ -26,7 +26,7 @@
   will-change: transform;
   /* 33⅓ rpm. Testado com steps() a 30 e 10 fps: o custo de CPU/GPU não caiu
      (ver docs/performance.md), então fica linear, que é mais suave. */
-  animation: spin 1.8s linear infinite;
+  animation: spin var(--spin, 1.8s) linear infinite;
   animation-play-state: paused;
 }
 body[data-status="playing"]:not([data-hidden]) .disc-spin {
@@ -218,7 +218,7 @@ body[data-fx="strong"] {
 }
 body[data-fx="soft"][data-status="playing"]:not([data-hidden]) .arm-art,
 body[data-fx="strong"][data-status="playing"]:not([data-hidden]) .arm-art {
-  animation: arm-wobble 1.8s ease-in-out infinite;
+  animation: arm-wobble var(--spin, 1.8s) ease-in-out infinite;
 }
 
 /* Sombra do braço: cópia escura deslocada em espaço de tela. */
