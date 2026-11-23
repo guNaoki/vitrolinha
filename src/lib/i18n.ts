@@ -40,6 +40,10 @@ const EN: Record<string, string> = {
   "Letra": "Lyrics",
   "Call do Discord": "Discord call",
   "Estante": "Shelf",
+  "Roda de cores": "Color wheel",
+  "Brilho da cor": "Color brightness",
+  "Brilho do fundo": "Background glow",
+  "Granulado": "Film grain",
   "Gerar cartão": "Create card",
   "Salva e copia uma imagem com os discos mais ouvidos": "Saves and copies an image of your most played records",
   // Estados

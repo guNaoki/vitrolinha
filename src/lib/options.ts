@@ -9,6 +9,10 @@
 // se usa mais fica no topo e o que é raro ou destrutivo (logs, sair) fica no pé.
 import { getMenu, menuClick, type MenuEntry } from "./ipc";
 import { t } from "./i18n";
+import { previewAccent } from "./accent";
+import { ColorWheel } from "./wheel";
+import { getLook, setLook } from "./ipc";
+import { paintLook } from "./look";
 
 type Sub = Extract<MenuEntry, { kind: "sub" }>;
 type Check = Extract<MenuEntry, { kind: "check" }>;
@@ -19,7 +23,7 @@ type Real = Exclude<MenuEntry, { kind: "separator" }>;
 const SECTIONS: { id: string; title: string; ids: string[] }[] = [
   { id: "play", title: "Reprodução", ids: ["sources", "sleep"] },
   { id: "disc", title: "Disco e som", ids: ["fx", "vinyl-rpm", "vinyl-crackle"] },
-  { id: "look", title: "Visual e conteúdo", ids: ["dynamic-color", "lyrics", "hd-cover"] },
+  { id: "look", title: "Visual e conteúdo", ids: ["accent", "lyrics", "hd-cover"] },
   { id: "windows", title: "Janelas", ids: ["panel-menu", "popup-menu"] },
   { id: "links", title: "Integrações", ids: ["discord", "discord-presence", "overlay", "shortcuts"] },
   { id: "general", title: "Geral", ids: ["autostart", "language", "shelf", "logs", "quit"] },
@@ -197,7 +201,9 @@ export class OptionsPanel {
     box.append(head);
 
     const kids = g.children;
-    if (kids.length && kids.every((c) => c.kind === "check")) {
+    if (g.id === "accent") {
+      box.append(this.palette(kids as Check[]));
+    } else if (kids.length && kids.every((c) => c.kind === "check")) {
       // Escolha entre poucas opções: botões marcáveis.
       box.append(this.chips((kids as Check[]).map((c) => this.chip(c.label, c.checked, c.enabled, c.id))));
     } else if (kids.length && kids.every((c) => c.kind === "item")) {
@@ -208,6 +214,70 @@ export class OptionsPanel {
       const sorted = [...kids].sort((a, b) => order[a.kind] - order[b.kind]);
       box.append(...this.entries(sorted));
     }
+    return box;
+  }
+
+  /**
+   * Cor de destaque: "Da capa" e "Âmbar" em botões, as cores prontas em bolinhas e, embaixo, um
+   * seletor de matiz para qualquer outra cor (a prévia é ao vivo; grava ao soltar).
+   */
+  private palette(kids: Check[]): HTMLElement {
+    const box = el("div", "opt-palette");
+    const modes = kids.filter((c) => !c.id.includes("#"));
+    const colors = kids.filter((c) => c.id.includes("#"));
+    box.append(this.chips(modes.map((c) => this.chip(c.label, c.checked, c.enabled, c.id))));
+
+    const dots = el("div", "opt-swatches");
+    for (const c of colors) {
+      const hex = c.id.slice(c.id.indexOf("#"));
+      const b = el("button", "swatch") as HTMLButtonElement;
+      b.type = "button";
+      b.style.setProperty("--swatch", hex);
+      b.title = splitHint(c.label)[0];
+      b.setAttribute("aria-label", b.title);
+      b.setAttribute("aria-pressed", String(c.checked));
+      b.addEventListener("click", () => void this.click(c.id));
+      dots.append(b);
+    }
+    box.append(dots);
+
+    // Roda de cores: parte da cor escolhida à mão (ou do âmbar), com prévia ao vivo.
+    const on = colors.find((c) => c.checked)?.id;
+    const wheel = new ColorWheel(on ? on.slice(on.indexOf("#")) : "#e8a33d", !!on, previewAccent, (hex) => void this.click(`accent:${hex}`));
+    box.append(wheel.el, this.atmosphere());
+    return box;
+  }
+
+  /** Brilho da cor no fundo e granulado de filme: dois controles deslizantes, gravados ao soltar. */
+  private atmosphere(): HTMLElement {
+    const box = el("div", "opt-atmos");
+    const state = { glow: 25, grain: 33 };
+    const slider = (key: "glow" | "grain", label: string) => {
+      const row = el("label", "opt-slider");
+      const out = el("output", "") as HTMLOutputElement;
+      const input = el("input", "") as HTMLInputElement;
+      input.type = "range";
+      input.min = "0";
+      input.max = "100";
+      const show = () => (out.textContent = `${state[key]}%`);
+      input.addEventListener("input", () => {
+        state[key] = Number(input.value);
+        show();
+        paintLook(state); // prévia ao vivo
+      });
+      input.addEventListener("change", () => void setLook(state).catch((e) => console.warn(e)));
+      row.append(text("span", "", label), out, input);
+      return { row, set: (v: number) => ((state[key] = v), (input.value = String(v)), show()) };
+    };
+    const glow = slider("glow", t("Brilho do fundo"));
+    const grain = slider("grain", t("Granulado"));
+    box.append(glow.row, grain.row);
+    void getLook()
+      .then((l) => {
+        glow.set(l.glow);
+        grain.set(l.grain);
+      })
+      .catch(() => {});
     return box;
   }
 
@@ -261,3 +331,4 @@ function text(tag: string, cls: string, content: string): HTMLElement {
   e.textContent = content;
   return e;
 }
+

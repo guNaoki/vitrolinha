@@ -14,7 +14,7 @@ Tauri 2 (Rust) + TypeScript/CSS puro + Vite.
 - Painel em tela cheia no monitor escolhido ou janela livre (moldura de mini toca-discos)
 - **Linha de duração**: acompanha a faixa e, se o player deixa, pula para onde você clicar. Também dá
   para **segurar o braço da agulha e soltar em outro ponto do disco**
-- Cor de destaque tirada da capa, capa em alta resolução (iTunes Search, opcional)
+- **Cor de destaque**: tirada da capa (padrão), âmbar clássico, sete cores prontas ou qualquer cor numa **roda de cores** (com brilho do fundo e granulado ajustáveis); capa em alta resolução (iTunes Search, opcional)
 - Letras sincronizadas (lrclib.net, opcional) com a linha atual acesa
 - Efeitos do disco (brilho/poeira que giram, tremor do braço), em 3 níveis; rotação em **16, 33 ou 45 rpm**
 - **Som de disco antigo** opcional por cima da música: chiado de superfície, estalinhos, arranhões e o "tec" de uma risca a cada volta do disco, em 3 níveis (gerado na hora, só com o painel aberto)

@@ -15,7 +15,7 @@ the Windows language, or pick one in the tray menu).
 - Panel on a full monitor or as a free window (mini turntable frame)
 - **Progress line**: follows the track and, if the player allows it, jumps wherever you click. You can
   also **grab the tonearm and drop the needle on another spot of the record**
-- Accent color taken from the cover art, high-resolution cover (iTunes Search, optional)
+- **Accent color**: taken from the cover art (default), classic amber, seven presets or any color on a **color wheel** (plus adjustable background glow and film grain); high-resolution cover (iTunes Search, optional)
 - Synced lyrics (lrclib.net, optional) with the current line lit up
 - Record effects (shimmer/dust that rotate, tonearm wobble) at 3 levels; **16, 33 or 45 rpm** speed
 - Optional **old record sound** over the music: surface hiss, ticks, scratches and the "tec" of a groove once per turn of the record, in 3 levels (generated on the fly, only while the panel is open)

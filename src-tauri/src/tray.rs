@@ -21,7 +21,7 @@ const ID_DISCORD: &str = "discord";
 const ID_PRESENCE: &str = "discord-presence";
 const ID_OVERLAY: &str = "overlay";
 const PREFIX_LANG: &str = "lang:";
-const ID_DYNAMIC_COLOR: &str = "dynamic-color";
+const PREFIX_ACCENT: &str = "accent:";
 const ID_LYRICS: &str = "lyrics";
 const ID_HD_COVER: &str = "hd-cover";
 const ID_HISTORY: &str = "history";
@@ -50,6 +50,16 @@ const POSITIONS: [(&str, &str); 6] = [
 ];
 /// Apps que aparecem sempre em "Fonte de mídia": (trecho do identificador, nome).
 const KNOWN_SOURCES: [(&str, &str); 2] = [("spotify", "Spotify"), ("music.youtube.com", "YouTube Music")];
+/// Cores prontas da "Cor de destaque" (hex, nome). A escolha livre (matiz) fica na tela de opções.
+const ACCENT_PRESETS: [(&str, &str); 7] = [
+    ("#e5484d", "Rubi"),
+    ("#f08a3c", "Laranja"),
+    ("#4cc38a", "Verde"),
+    ("#2bb3c0", "Turquesa"),
+    ("#4c8dff", "Azul"),
+    ("#9b7bff", "Violeta"),
+    ("#ee6fa8", "Rosa"),
+];
 const DURATIONS_MS: [u64; 4] = [2_000, 4_000, 6_000, 10_000];
 
 pub fn init(app: &AppHandle) -> tauri::Result<()> {
@@ -276,6 +286,41 @@ fn vinyl_menu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
     Ok(menu)
 }
 
+/// "Cor de destaque": a da capa (muda a cada disco), o âmbar clássico, uma cor pronta ou uma
+/// personalizada (escolhida na tela de opções).
+fn accent_menu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
+    let custom = settings::accent_custom(app);
+    let dynamic = settings::dynamic_color(app);
+    let menu = Submenu::with_id(app, "accent", tr(app, "Cor de destaque"), true)?;
+    menu.append(&check(app, &format!("{PREFIX_ACCENT}cover"), &tr(app, "Da capa do disco"), custom.is_none() && dynamic)?)?;
+    menu.append(&check(app, &format!("{PREFIX_ACCENT}amber"), &tr(app, "Âmbar clássico"), custom.is_none() && !dynamic)?)?;
+    for (hex, name) in ACCENT_PRESETS {
+        menu.append(&check(app, &format!("{PREFIX_ACCENT}{hex}"), &tr(app, name), custom.as_deref() == Some(hex))?)?;
+    }
+    if let Some(c) = custom.as_deref().filter(|c| !ACCENT_PRESETS.iter().any(|(h, _)| h == c)) {
+        menu.append(&check(app, &format!("{PREFIX_ACCENT}{c}"), &tr(app, "Personalizada"), true)?)?;
+    }
+    Ok(menu)
+}
+
+/// Aplica a escolha de cor: avisa as janelas e reemite a faixa (cor nova na hora).
+fn set_accent(app: &AppHandle, choice: &str) {
+    match choice {
+        "cover" => {
+            settings::set_accent_custom(app, None);
+            settings::set_dynamic_color(app, true);
+        }
+        "amber" => {
+            settings::set_accent_custom(app, None);
+            settings::set_dynamic_color(app, false);
+        }
+        hex if settings::valid_hex(hex) => settings::set_accent_custom(app, Some(&hex.to_ascii_lowercase())),
+        _ => return,
+    }
+    let _ = app.emit("accent", settings::accent_custom(app));
+    media::refresh(app);
+}
+
 /// "Idioma": automático (o do Windows), português ou inglês.
 fn language_menu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
     let current = settings::language(app);
@@ -288,7 +333,6 @@ fn language_menu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
 }
 
 fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
-    let dynamic = check(app, ID_DYNAMIC_COLOR, &tr(app, "Cor de destaque da capa"), settings::dynamic_color(app))?;
     let lyrics = check(app, ID_LYRICS, &tr(app, "Letras sincronizadas (consulta lrclib.net)"), settings::lyrics_enabled(app))?;
     let hd_cover = check(app, ID_HD_COVER, &tr(app, "Capa em alta resolução (consulta iTunes)"), settings::hd_cover(app))?;
     let discord = check(app, ID_DISCORD, &tr(app, "Call do Discord na tela cheia (precisa de configuração)"), settings::discord_enabled(app))?;
@@ -327,7 +371,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &vinyl_menu(app)?,
             &sleep_menu(app)?,
             &shelf_menu(app)?,
-            &dynamic,
+            &accent_menu(app)?,
             &lyrics,
             &hd_cover,
             &discord,
@@ -349,10 +393,6 @@ fn on_menu(app: &AppHandle, id: &str) {
         ID_POPUP_PLAY_PAUSE => settings::set_popup_on_play_pause(app, !settings::popup_on_play_pause(app)),
         ID_PANEL => windows::set_panel_enabled(app, !settings::panel_enabled(app)),
         ID_FILL => windows::set_fills_monitor(app, !settings::panel_fills_monitor(app)),
-        ID_DYNAMIC_COLOR => {
-            settings::set_dynamic_color(app, !settings::dynamic_color(app));
-            media::refresh(app); // aplica na hora, sem esperar a próxima faixa
-        }
         ID_LYRICS => {
             settings::set_lyrics_enabled(app, !settings::lyrics_enabled(app));
             lyrics::reload(app); // limpa ou busca a letra da faixa atual na hora
@@ -406,6 +446,8 @@ fn on_menu(app: &AppHandle, id: &str) {
                 sleep::start(app, min);
             } else if let Some(choice) = id.strip_prefix(PREFIX_LANG).filter(|c| ["auto", "pt", "en"].contains(c)) {
                 i18n::set_language(app, choice);
+            } else if let Some(choice) = id.strip_prefix(PREFIX_ACCENT) {
+                set_accent(app, choice);
             } else if let Some(pos) = id.strip_prefix(PREFIX_POSITION) {
                 settings::set_popup_position(app, pos);
             } else if let Some(ms) = id.strip_prefix(PREFIX_DURATION).and_then(|v| v.parse().ok()) {

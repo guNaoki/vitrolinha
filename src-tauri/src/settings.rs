@@ -156,6 +156,34 @@ pub fn set_dynamic_color(app: &AppHandle, on: bool) {
     set(app, "dynamicColor", json!(on));
 }
 
+/// Cor de destaque escolhida à mão ("#rrggbb", minúsculas). Sem ela vale `dynamic_color`:
+/// da capa (padrão) ou o âmbar clássico.
+pub fn valid_hex(c: &str) -> bool {
+    c.len() == 7 && c.starts_with('#') && c[1..].bytes().all(|b| b.is_ascii_hexdigit())
+}
+pub fn accent_custom(app: &AppHandle) -> Option<String> {
+    get::<String>(app, "accentCustom").filter(|c| valid_hex(c)).map(|c| c.to_ascii_lowercase())
+}
+pub fn set_accent_custom(app: &AppHandle, color: Option<&str>) {
+    set(app, "accentCustom", json!(color));
+}
+
+/// "Atmosfera" do painel: brilho da cor no fundo e granulado de filme, ambos de 0 a 100.
+#[derive(Clone, Copy, Serialize)]
+pub struct Look {
+    pub glow: u8,
+    pub grain: u8,
+}
+pub const DEFAULT_LOOK: Look = Look { glow: 25, grain: 33 };
+pub fn look(app: &AppHandle) -> Look {
+    let pct = |key: &str, default: u8| get::<u8>(app, key).map(|v| v.min(100)).unwrap_or(default);
+    Look { glow: pct("lookGlow", DEFAULT_LOOK.glow), grain: pct("lookGrain", DEFAULT_LOOK.grain) }
+}
+pub fn set_look(app: &AppHandle, glow: u8, grain: u8) {
+    set(app, "lookGlow", json!(glow.min(100)));
+    set(app, "lookGrain", json!(grain.min(100)));
+}
+
 // ---- Discord: arquivo próprio (discord.json)
 // Fica fora do settings.json de propósito: aquele é regravado pelo app a partir de uma cópia
 // em memória (editar com o app aberto perde a edição; um BOM invalida o arquivo todo).
@@ -326,4 +354,20 @@ pub fn panel_monitor(app: &AppHandle) -> Option<MonitorRef> {
 }
 pub fn set_panel_monitor(app: &AppHandle, m: &MonitorRef) {
     set(app, "panelMonitor", json!(m));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::valid_hex;
+
+    #[test]
+    fn only_full_hex_colors_are_accepted() {
+        assert!(valid_hex("#e5484d"));
+        assert!(valid_hex("#ABCDEF"));
+        assert!(!valid_hex("e5484d"));
+        assert!(!valid_hex("#e5484"));
+        assert!(!valid_hex("#e5484dd"));
+        assert!(!valid_hex("#e5484g"));
+        assert!(!valid_hex("cover"));
+    }
 }

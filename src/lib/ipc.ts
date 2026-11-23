@@ -96,6 +96,18 @@ export const getVinyl = () => invoke<Vinyl>("get_vinyl");
 export const onVinyl = (cb: (v: Vinyl) => void): Promise<UnlistenFn> =>
   listen<Vinyl>("vinyl", (e) => cb(e.payload));
 
+/** Cor de destaque escolhida à mão ("#rrggbb") ou nenhuma (da capa / âmbar); menu da bandeja. */
+export const getAccent = () => invoke<string | null>("get_accent");
+export const onAccent = (cb: (c: string | null) => void): Promise<UnlistenFn> =>
+  listen<string | null>("accent", (e) => cb(e.payload));
+
+/** "Atmosfera" do painel: brilho da cor no fundo e granulado (0–100). */
+export type Look = { glow: number; grain: number };
+export const getLook = () => invoke<Look>("get_look");
+export const setLook = (look: Look) => invoke<void>("set_look", look);
+export const onLook = (cb: (l: Look) => void): Promise<UnlistenFn> =>
+  listen<Look>("look", (e) => cb(e.payload));
+
 /** Modo de janela livre (arrastar/redimensionar) ligado? */
 export const isPanelFree = () => invoke<boolean>("panel_is_free");
 export const onPanelFree = (cb: (free: boolean) => void): Promise<UnlistenFn> =>

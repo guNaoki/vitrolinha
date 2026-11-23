@@ -1,5 +1,6 @@
 import "./lib/dev-mock"; // só em dev no navegador (ver o arquivo)
-import { applyAccent } from "./lib/accent";
+import { applyAccent, initAccent } from "./lib/accent";
+import { initLook } from "./lib/look";
 import { initI18n, t } from "./lib/i18n";
 import { armAngle, PANEL_ARM, setArm } from "./lib/arm";
 import { setCover } from "./lib/disc";
@@ -365,6 +366,8 @@ void isPanelFree().then(applyFree);
 
 addEventListener("resize", fit);
 initDiskFx();
+initAccent();
+initLook();
 initVinyl((v) => {
   crackleLevel = v.crackle;
   crackleRpm = v.rpm;

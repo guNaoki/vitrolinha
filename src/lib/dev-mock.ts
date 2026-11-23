@@ -29,10 +29,11 @@ function install() {
   };
   let volume = { level: 0.4, muted: false };
   let vinyl = { rpm: 33, crackle: "off" };
+  let look = { glow: 25, grain: 33 };
 
   // Menu de opções de mentira (o de verdade vem do Rust, tray.rs): alguns ligar/desligar e escolhas.
-  const flags: Record<string, boolean> = { popup: true, panel: true, fill: true, history: true, "dynamic-color": true, lyrics: true, "hd-cover": true, discord: true, "discord-presence": true, overlay: false, shortcuts: true, autostart: false };
-  const choices: Record<string, string> = { fx: "fx:soft", rpm: "rpm:33", crackle: "crackle:off", "popup-pos": "popup-pos:top-right", "popup-dur": "popup-dur:4000", source: "source:", monitor: "monitor:0", lang: "lang:auto" };
+  const flags: Record<string, boolean> = { popup: true, panel: true, fill: true, history: true, lyrics: true, "hd-cover": true, discord: true, "discord-presence": true, overlay: false, shortcuts: true, autostart: false };
+  const choices: Record<string, string> = { fx: "fx:soft", rpm: "rpm:33", crackle: "crackle:off", "popup-pos": "popup-pos:top-right", "popup-dur": "popup-dur:4000", source: "source:", monitor: "monitor:0", lang: "lang:auto", accent: "accent:cover" };
   const chk = (id: string, label: string) => ({ kind: "check", id, label, checked: flags[id], enabled: true });
   const pick = (group: string, id: string, label: string) => ({ kind: "check", id, label, checked: choices[group] === id, enabled: true });
   const menu = () => [
@@ -42,7 +43,7 @@ function install() {
     { kind: "sub", id: "fx", label: "Efeitos do disco", children: [["off", "Desligados"], ["soft", "Suaves"], ["strong", "Fortes"]].map(([p, l]) => pick("fx", `fx:${p}`, l)) },
     { kind: "sub", id: "vinyl", label: "Vinil", children: [{ kind: "sub", id: "vinyl-rpm", label: "Rotação do disco", children: [16, 33, 45].map((r) => pick("rpm", `rpm:${r}`, `${r} rpm`)) }, { kind: "sub", id: "vinyl-crackle", label: "Som de disco antigo (com o painel aberto)", children: [["off", "Desligado"], ["soft", "Leve"], ["medium", "Médio"], ["strong", "Gasto (muito velho)"]].map(([p, l]) => pick("crackle", `crackle:${p}`, l)) }] },
     { kind: "sub", id: "sleep", label: "Dormir (pausar depois de...)", children: [15, 30, 45, 60, 90].map((m) => ({ kind: "item", id: `sleep:${m}`, label: `${m} minutos`, enabled: true })).concat([{ kind: "item", id: "sleep-cancel", label: "Cancelar o timer", enabled: false }]) },
-    chk("dynamic-color", "Cor de destaque da capa"),
+    { kind: "sub", id: "accent", label: "Cor de destaque", children: [["cover", "Da capa do disco"], ["amber", "Âmbar clássico"], ["#e5484d", "Rubi"], ["#f08a3c", "Laranja"], ["#4cc38a", "Verde"], ["#2bb3c0", "Turquesa"], ["#4c8dff", "Azul"], ["#9b7bff", "Violeta"], ["#ee6fa8", "Rosa"]].map(([v, n]) => pick("accent", `accent:${v}`, n)) },
     chk("lyrics", "Letras sincronizadas (consulta lrclib.net)"),
     chk("hd-cover", "Capa em alta resolução (consulta iTunes)"),
     chk("discord", "Call do Discord na tela cheia (precisa de configuração)"),
@@ -76,7 +77,11 @@ function install() {
       const id = String(a.id);
       if (id in flags) flags[id] = !flags[id];
       else choices[id.split(":")[0]] = id;
+      if (id.startsWith("accent:")) emit("accent", /^accent:#/.test(id) ? id.slice(7) : null);
     },
+    get_look: () => look,
+    set_look: (a) => { look = { glow: Number(a.glow), grain: Number(a.grain) }; emit("look", look); },
+    get_accent: () => (/^accent:#/.test(choices.accent) ? choices.accent.slice(7) : null),
     get_lang: () => (new URLSearchParams(location.search).get("lang") === "en" ? "en" : "pt"), // ?lang=en
     get_history: () =>
       [["Tarde em Itapoã", "Vinicius de Moraes", 12], ["Águas de Março", "Tom Jobim & Elis Regina", 9], ["Garota de Ipanema", "Stan Getz", 7], ["Construção", "Chico Buarque", 4], ["Ela é Carioca", "Tom Jobim", 2], ["Chega de Saudade", "João Gilberto", 1]].map(

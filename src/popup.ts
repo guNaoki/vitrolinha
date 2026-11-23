@@ -1,4 +1,4 @@
-import { applyAccent } from "./lib/accent";
+import { applyAccent, initAccent } from "./lib/accent";
 import { armAngle, POPUP_ARM, setArm } from "./lib/arm";
 import { setCover } from "./lib/disc";
 import { initDiskFx } from "./lib/fx";
@@ -95,6 +95,7 @@ function setVisible(v: boolean) {
 }
 
 initDiskFx();
+initAccent();
 initVinyl(); // rotação 33/45 (o chiado é só do painel)
 void onNowPlaying(render);
 void onPopupVisible(setVisible);

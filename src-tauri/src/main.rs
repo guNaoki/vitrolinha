@@ -131,6 +131,24 @@ fn get_vinyl(app: tauri::AppHandle) -> settings::Vinyl {
     settings::vinyl(&app)
 }
 
+/// Cor de destaque escolhida à mão (ou nenhuma); mudanças chegam pelo evento `accent`.
+#[tauri::command]
+fn get_accent(app: tauri::AppHandle) -> Option<String> {
+    settings::accent_custom(&app)
+}
+
+/// Brilho do fundo e granulado do painel; mudanças chegam pelo evento `look`.
+#[tauri::command]
+fn get_look(app: tauri::AppHandle) -> settings::Look {
+    settings::look(&app)
+}
+
+#[tauri::command]
+fn set_look(app: tauri::AppHandle, glow: u8, grain: u8) {
+    settings::set_look(&app, glow, grain);
+    let _ = tauri::Emitter::emit(&app, "look", settings::look(&app));
+}
+
 /// Botão "diminuir/ampliar": alterna entre ocupar o monitor inteiro e a janela livre.
 #[tauri::command]
 fn toggle_panel_size(app: tauri::AppHandle) {
@@ -173,6 +191,9 @@ fn main() {
             toggle_panel_size,
             get_disk_fx,
             get_vinyl,
+            get_accent,
+            get_look,
+            set_look,
             get_lang,
             get_menu,
             menu_click,

@@ -408,11 +408,13 @@ fn emit(app: &AppHandle, np: &NowPlaying) {
     }
 }
 
-/// O que o front recebe: com "Cor da capa" desligada, sem `accentColor`.
-/// (O estado guardado mantém a cor, para religar sem reler a capa.)
+/// O que o front recebe: `accentColor` é a cor escolhida à mão, senão a da capa, senão nenhuma
+/// (âmbar). (O estado guardado mantém a cor da capa, para voltar a ela sem reler a imagem.)
 pub fn for_ui(app: &AppHandle, np: &NowPlaying) -> NowPlaying {
     let mut out = np.clone();
-    if !settings::dynamic_color(app) {
+    if let Some(custom) = settings::accent_custom(app) {
+        out.accent_color = Some(custom);
+    } else if !settings::dynamic_color(app) {
         out.accent_color = None;
     }
     crate::hdcover::apply(app, &mut out);
